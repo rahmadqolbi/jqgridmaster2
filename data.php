@@ -157,8 +157,6 @@ global $koneksi;
           'TotalRows' => $total_rows,
           'Rows' => $customers
         );
-
-        
         // echo json_encode($data);
         // kode dibawah adalah untuk searching filter toolbars
       }elseif($filters = isset($_REQUEST['filters']) ? json_decode($_REQUEST['filters'], true) : []){
@@ -182,21 +180,25 @@ global $koneksi;
               }
                 $i++;
             }
-            
             $result = mysqli_query($koneksi, $query);
             $data = array();
             while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
             }
-            
-            
-        }
-        
+        } 
+     
     }
+    // $grid->setGridParam(array(
+  //     'postData'=>array(
+  //         'filters'=>"",
+  //     ),
+  // ));
+  // $grid->trigger("reloadGrid");
+ 
     echo json_encode($data);
       
       
-      
+
       
       
       

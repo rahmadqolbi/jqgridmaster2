@@ -37,8 +37,6 @@ require "db.php";
         font-size: 12px;
         text-transform: uppercase;
     }
-    
- 
 </style>
 
 <body>
@@ -47,37 +45,41 @@ require "db.php";
         <form action="" method="post">
             <table id="grid_id"></table>
             <div id="jqGridPager" class="sasa"></div>
+
         </form>
     </div>
 
 
 
     <script>
-        // menampilkan data ke browser dari data json
+        
+        const customerTable = '#grid_id'
+        $(document).ready(function() {
+            $(document).on('click', '#clearFilter', function () {
+		currentSearch = undefined
+	  $('[id*="gs_"]').val('')
+	  $(customerTable).jqGrid('setGridParam', { postData: null })
+	  $(customerTable)
+	    .jqGrid('setGridParam', {
+	      postData: {
+	        page: 1,
+	        rows: 10,
+	        sidx: 'customer_name',
+	        sord: 'asc',
+	      },
+	    })
 
-        //         function myelem (value, options) {
-        //   var el = document.createElement("input");
-        //   el.setAttribute = "datepicker";
-        //   el.type="date";
-        //   el.value = value;
-        //   return el;
-        // }
+	    .trigger('reloadGrid')
+	  highlightSearch = 'undefined'
+	})
+        }),
+   
 
-
-        // function myvalue(elem, operation, value) {
-        //     if(operation === 'get') {
-        //        return $(elem).val();
-        //     } else if(operation === 'set') {
-        //        $(elem).val(value);
-        //     }
-        // }
-            
         $("#grid_id").jqGrid({
             datatype: 'json',
             url: 'data.php',
             pager: '#jqGridPager',
             emptyrecords: "Nothing to display",
-            // colNames: ['sa','nama_pelanggan','tgl_pembelian'],
             mtype: 'GET',
             editurl: 'update.php',
             colModel: [
@@ -86,11 +88,13 @@ require "db.php";
                     name: 'id',
                     label: 'Id',
                     key: true,
-                    search:true,
-                    sortable:true,
+                    search: true,
+                    sortable: true,
                     datafield: 'id',
                     index: 'id',
-                    searchoptions: {sopt: ["eq", "ne", "lt", "le", "gt", "ge"]}
+                    searchoptions: {
+                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
+                    }
 
                 },
                 {
@@ -98,9 +102,11 @@ require "db.php";
                     index: 'no_invoice',
                     label: 'No Invoice',
                     editable: true,
-                    search:true,
-                    searchoptions: {sopt: ["eq", "ne", "lt", "le", "gt", "ge"]},
-                    sortable:true,
+                    search: true,
+                    searchoptions: {
+                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
+                    },
+                    sortable: true,
                     datafield: 'no_invoice',
                     numberOfColumns: 2,
                     editrules: {
@@ -119,16 +125,18 @@ require "db.php";
                 {
                     name: 'tgl_pembelian',
                     width: 200,
-                    index:'tgl_pembelian',
-                    searchoptions: {sopt: ["eq", "ne", "lt", "le", "gt", "ge"]},
+                    index: 'tgl_pembelian',
+                    searchoptions: {
+                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
+                    },
                     datafield: 'tgl_pembelian',
                     label: 'Tanggal Pembelian',
                     editable: true,
                     sorttype: 'date',
                     formatter: 'date',
                     search: true,
-                    sortable:true,
-                    loadonce: true,
+                    sortable: true,
+                    loadonce: false,
                     formatoptions: {
                         srcformat: "Y-m-d",
                         newformat: "d-m-Y"
@@ -137,40 +145,32 @@ require "db.php";
                     editoptions: {
 
                         dataInit: function (tgl) {
-                            // $(tgl).inputmask("99/99/9999");
                             $(tgl).datepicker({
                                 dateFormat: 'dd-mm-yy',
-                            }),$(tgl).inputmask("date",{
-                                mask:"1-2-y",
+                            }), $(tgl).inputmask("date", {
+                                mask: "1-2-y",
                                 separator: "-",
                                 alias: "D-M-Y",
-                                
+
                             })
-                                
-                               
-                            
+
+
+
                         },
-                        // defaultValue: function () {
-                        //     var currentTime = new Date();
-                        //     var month = parseInt(currentTime.getMonth() + 1);
-                        //     month = month <= 9 ? "0" + month : month;
-                        //     var day = currentTime.getDate();
-                        //     day = day <= 9 ? "0" + day : day;
-                        //     var year = currentTime.getFullYear();
-                        //     return day + "-" + month + "-" + year;
-                        // }
                     },
 
                 },
                 {
                     name: 'nama_pelanggan',
                     label: 'Nama Pelanggan',
-                    searchoptions: {sopt: ["eq", "ne", "lt", "le", "gt", "ge"]},
+                    searchoptions: {
+                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
+                    },
                     width: 200,
                     editable: true,
                     datafield: 'nama_pelanggan',
-                    search:true,
-                    sortable:true,
+                    search: true,
+                    sortable: true,
                     editrules: {
                         edithidden: true,
                         required: true
@@ -187,10 +187,12 @@ require "db.php";
                     label: 'Jenis Kelamin',
                     datafield: 'jenis_kelamin',
                     editable: true,
-                    searchoptions: {sopt: ["eq", "ne", "lt", "le", "gt", "ge"]},
-                    search:true,
+                    searchoptions: {
+                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
+                    },
+                    search: true,
                     formatter: "select",
-                    sortable:true,
+                    sortable: true,
                     editrules: {
                         edithidden: true,
                         required: true
@@ -204,18 +206,6 @@ require "db.php";
                             $(element).height(5).select2();
                         }
                     },
-                    // stype: "select",
-                    // searchoptions: {
-                    //     value: "LAKI-LAKI:LAKI-LAKI;PEREMPUAN:PEREMPUAN",
-                    //     defaultValue: "Search",
-                    //     dataInit: function(element) {
-                    //         $(element).width(122).select2({
-                    //             dropdownCssClass: "ui-widget ui-jqdialog"
-                    //         });
-                    //     }
-                    // }
-
-
                 },
                 {
                     name: 'saldo',
@@ -224,10 +214,12 @@ require "db.php";
                     editable: true,
                     sorttype: "float",
                     formatter: 'number',
-                    searchoptions: {sopt: ["eq", "ne", "lt", "le", "gt", "ge"]},
+                    searchoptions: {
+                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
+                    },
                     datafield: 'saldo',
-                    sortable:true,
-                    search:true,
+                    sortable: true,
+                    search: true,
                     align: 'right',
                     editrules: {
                         edithidden: true,
@@ -237,9 +229,6 @@ require "db.php";
                         thousandsSeparator: ".",
                         decimalSeparator: ".",
                         decimalPlaces: 0,
-
-                        // prefix : "Rp. ",
-                        // deaultValue: "Rp. 0.00"
                     },
                     editoptions: {
                         dataInit: function (elem) {
@@ -261,93 +250,119 @@ require "db.php";
 
                         }
                     },
-                    // sorttype: function (cell, rowData) {
-                    //         return (parseInt(rowData.Price) * parseInt(rowData.Quantity));
-                    //     }
-
 
                 },
 
-                //   defaultValue: function(){ 
-                //     var currentTime = new Date(); 
-                //     var month = parseInt(currentTime.getMonth() + 1); 
-                //     month = month <= 9 ? "0"+month : month; 
-                //     var day = currentTime.getDate(); 
-                //     day = day <= 9 ? "0"+day : day; 
-                //     var year = currentTime.getFullYear(); 
-                //     return day+"/"+month + "/"+year; 
-                //   } 
-
-                // },
-
-                // {
-                // 	"name":"parent_id",
-                // 	"hidden":true
-                // }
             ],
-				viewrecords: true,
-                width: 1200,
-                height: 200,
-                rowNum: 10,//jumlah baris data yang akan ditampilkan pada setiap halaman
-                rowList: [10,20,30], //rowList adalah daftar opsi jumlah baris yang dapat dipilih oleh pengguna untuk ditampilkan pada setiap halaman
-                pager: "#jqGridPager",
-                caption: "Master Penjualan",
-                sortname: 'id',
-                autoencode: true,
-                sortorder: 'asc',
-                height: 'auto',
-                // loadonce: false,
-                rownumbers: true,
-	            rownumWidth: 40,
-                viewrecords: true,
-                gridview: true,
-                search: true,
-postData: {
-searchField: "",
-searchOper: "",
-searchString: ""
-},
-                postData: {
-        filters: function() {
-            return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData").filters);
-        }
-    },
-    
-    search: true,
-    postData: {
-        filters: ""
-    }
+            viewrecords: true,
+            width: 1200,
+            height: 200,
+            rowNum: 10, //jumlah baris data yang akan ditampilkan pada setiap halaman
+            rowList: [10, 20,
+            30], //rowList adalah daftar opsi jumlah baris yang dapat dipilih oleh pengguna untuk ditampilkan pada setiap halaman
+            pager: "#jqGridPager",
+            caption: "Master Penjualan",
+            sortname: 'id',
+            // autoencode: true,
+            sortorder: 'asc',
+            height: 'auto',
+            // loadonce: false,
+            rownumbers: true,
+            rownumWidth: 40,
+            gridview: true,
+            search: true,
+            toolbar: [true, 'top'],
+            afterSearch: null,
+            beforeClear: null,
+            afterClear: null,
+            onClearSearchValue: null,
+            loadComplete: function () {
+                setTimeout(function () {
+                    
+                    $('#gsh_grid_id_rn').html(`
+	    		<button id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>	
+	  		`).click(function (e) {
                 
+                var grid = $("#grid_id");
+                // Clear the filter
+                grid.jqGrid('clearGridData');
+                grid[0].p.search = false;//pencarian tidak sedang dilakukan
+                $.extend(grid[0].p.postData, {filters: ""});
+                // Reload the grid
+                grid.trigger("reloadGrid",  [{ page: 1 }]);
+                e.preventDefault();//agar tidak mereload ulang halaman
+                    })
+                    
+                    
+                })
+            },
+
+
+            postData: {
+                searchField: "",
+                searchOper: "",
+                searchString: ""
+            },
+            postData: {
+                filters: function () {
+                    return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData")
+                    .filters);
+                }
+            },
+            search: true,
+            postData: {
+                filters: ""
+            }
+
         });
-        
+
         // '#jqGridPager', null,
-        jQuery("#grid_id").jqGrid('filterToolbar',{
-            // groupOp: 'AND',
-    defaultSearch: "cn",
-    searchOnEnter: true,
-    searchOperators: true,
-    stringResult: true,
-            gridComplete: function(){ 
-        $("#grid_id").setGridParam({datatype: 'json'}); 
-}
+        jQuery("#grid_id").jqGrid('filterToolbar', {
+            defaultSearch: "cn",
+            searchOnEnter: false,//MENCARI SAAT DI KLIK ENTER FALSE
+            searchOperators: true,
+            stringResult: true,
+            afterSearch: function() {
+				indexRow = 0
+			},
+            gridComplete: function () {
+                $("#grid_id").setGridParam({
+                    datatype: 'json'
+                });
+
+            }
         });
-        jQuery("#grid_id").on("change keyup", function() {
-    var search_value = jQuery(this).val();
-    jQuery("#grid_id").setGridParam({
-        postData: {
-            filters: JSON.stringify({
-                groupOp: "AND",
-                rules: [
-                    { field: "column_name", op: "cn", data: search_value }
-                ]
-            }),
-            multipleSearch: true,
-            
-        }
-    }).trigger("reloadGrid");
-});
+        jQuery("#grid_id").on("change keyup", function () {
+            var search_value = jQuery(this).val();
+            jQuery("#grid_id").setGridParam({
+                postData: {
+                    filters: JSON.stringify({
+                        groupOp: "AND",
+                        rules: [{
+                            field: "column_name",
+                            op: "cn",
+                            data: search_value
+                        }]
+                    }),
+                    multipleSearch: true,
+
+                }
+            }).trigger("reloadGrid");
+        });
+        $("#grid_id").jqGrid('navButtonAdd', '#jqGridPager', {
+            caption: "",
+            title: "Clear All Filters",
+            buttonicon: "ui-icon-refresh",
+            onClickButton: function () {
+                $("#grid_id")[0].clearToolbar();
+                $("#grid_id").trigger("reloadGrid");
+
+            }
+        });
+
+
         jQuery("#grid_id").jqGrid('navGrid', '#jqGridPager', null, {
-          
+
             recreateForm: true,
             beforeShowForm: function (form) {
                 form[0].querySelector('#no_invoice').setAttribute('readonly', 'readonly')
@@ -355,11 +370,19 @@ searchString: ""
 
         }, {
             recreateForm: true
-        });
-    
-      
-      
 
+        });
+
+
+        // $('#gsh_grid_id_rn').html(`
+        // 		<button id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>	
+        // 	`).click(function() {
+
+        // 	})
+
+        //               $("#clear").click(function() {
+        //   $("#grid_id")[0].clearToolbar();
+        // });
     </script>
 </body>
 
