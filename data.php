@@ -164,7 +164,7 @@ global $koneksi;
         if (isset($filterData['rules']) && !empty($filterData['rules'])) {
             $groupOp = $filters['groupOp'];
             $rules = $filters['rules'];
-            $query = "SELECT * FROM `penjualan` WHERE ";
+            $query = "SELECT * FROM `penjualan` WHERE  ";
             $i = 0;
             foreach ($rules as $rule) {
                 $field = $rule['field'];
@@ -181,6 +181,9 @@ global $koneksi;
                 $i++;
             }
             $result = mysqli_query($koneksi, $query);
+            if (!$result) {
+            die("Query error: " . mysqli_error($koneksi));
+            }
             $data = array();
             while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
@@ -188,6 +191,9 @@ global $koneksi;
         } 
      
     }
+   
+
+   
     // $grid->setGridParam(array(
   //     'postData'=>array(
   //         'filters'=>"",

@@ -52,28 +52,67 @@ require "db.php";
 
 
     <script>
-        
         const customerTable = '#grid_id'
-        $(document).ready(function() {
-            $(document).on('click', '#clearFilter', function () {
-		currentSearch = undefined
-	  $('[id*="gs_"]').val('')
-	  $(customerTable).jqGrid('setGridParam', { postData: null })
-	  $(customerTable)
-	    .jqGrid('setGridParam', {
-	      postData: {
-	        page: 1,
-	        rows: 10,
-	        sidx: 'customer_name',
-	        sord: 'asc',
-	      },
-	    })
+        let indexRow = 0
+        let sortName = 'customer_name'
+        let timeout = null
+        let highlightSearch
+        let noInvoice
+        let currentSearch
+        let postData
+        let ordersPostData
+        let triggerClick = true
+        let activeGrid = '#grid_id'
+        let socket
+        $(window).resize(function () {
+            $(customerTable).setGridWidth($(window).width() - 15)
 
-	    .trigger('reloadGrid')
-	  highlightSearch = 'undefined'
-	})
-        }),
-   
+        })
+        $(document).ready(function () {
+                $(document).on('click', '#clearFilter', function () {
+                        currentSearch = undefined
+                        $('[id*="gs_"]').val('')
+                        $(customerTable).jqGrid('setGridParam', {
+                            postData: null
+                        })
+                        $(customerTable)
+                            .jqGrid('setGridParam', {
+                                postData: {
+                                    page: 1,
+                                    rows: 10,
+                                    sidx: 'customer_name',
+                                    sord: 'asc',
+                                },
+                            })
+                            .trigger('reloadGrid')
+                        highlightSearch = 'undefined'
+                    }),
+
+
+                    $('#t_grid_id').html(`
+		<div id="global_search">
+			<label> Global search </label>
+			<input id="gs_global_search" class="ui-widget-content ui-corner-all" style="padding: 4px;" globalsearch="true" clearsearch="true">
+		</div>
+	`)
+            }),
+
+
+            $('#t_grid_id input').on('input', function () {
+                clearTimeout(timeout)
+
+                timeout = setTimeout(function () {
+                    indexRow = 0
+                    $(customerTable).jqGrid('setGridParam', {
+                        postData: {
+                            'global_search': highlightSearch
+                        }
+                    }).trigger('reloadGrid')
+                }, 500);
+            })
+
+
+        // stop
 
         $("#grid_id").jqGrid({
             datatype: 'json',
@@ -259,7 +298,8 @@ require "db.php";
             height: 200,
             rowNum: 10, //jumlah baris data yang akan ditampilkan pada setiap halaman
             rowList: [10, 20,
-            30], //rowList adalah daftar opsi jumlah baris yang dapat dipilih oleh pengguna untuk ditampilkan pada setiap halaman
+                30
+            ], //rowList adalah daftar opsi jumlah baris yang dapat dipilih oleh pengguna untuk ditampilkan pada setiap halaman
             pager: "#jqGridPager",
             caption: "Master Penjualan",
             sortname: 'id',
@@ -272,29 +312,79 @@ require "db.php";
             gridview: true,
             search: true,
             toolbar: [true, 'top'],
-            afterSearch: null,
-            beforeClear: null,
-            afterClear: null,
-            onClearSearchValue: null,
+            // afterSearch: null,
+            // beforeClear: null,
+            // afterClear: null,
+            // onClearSearchValue: null,
+            //         autoResizing: {
+            //   compact: true
+            // },
+
             loadComplete: function () {
-                setTimeout(function () {
-                    
-                    $('#gsh_grid_id_rn').html(`
-	    		<button id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>	
-	  		`).click(function (e) {
-                
-                var grid = $("#grid_id");
-                // Clear the filter
-                grid.jqGrid('clearGridData');
-                grid[0].p.search = false;//pencarian tidak sedang dilakukan
-                $.extend(grid[0].p.postData, {filters: ""});
-                // Reload the grid
-                grid.trigger("reloadGrid",  [{ page: 1 }]);
-                e.preventDefault();//agar tidak mereload ulang halaman
-                    })
-                    
-                    
+                // bindkeys
+
+                $(document).unbind('keydown')
+                // setCustomBindKeys($(this))
+                // postData = $(this).jqGrid('getGridParam', 'postData')
+                // if (triggerClick) {
+                // 	$('#' + $('#grid_id').getDataIDs()[indexRow]).click()
+                // 	triggerClick = false
+                // } else {
+                // 	$('#grid_id').setSelection($('#grid_id').getDataIDs()[indexRow])
+                // }
+                setCustomBindKeys($(this))
+postData = $(this).jqGrid('getGridParam', 'postData')
+var rowsPerPage = $(this).jqGrid('getGridParam', 'rowNum');
+var selectedRowId = $(this).jqGrid('getGridParam', 'selrow');
+var indexRow = $(this).jqGrid('getInd', selectedRowId);
+if (triggerClick) {
+    $('#' + $(this).getDataIDs()[indexRow]).click()
+    triggerClick = false
+} else {
+    var nextIndexRow = indexRow + rowsPerPage;
+    if (nextIndexRow < $(this).getGridParam('records')) {
+        $(this).jqGrid('setSelection', $(this).getDataIDs()[nextIndexRow], false);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+                //     $('#grid_id tbody tr td:not([aria-describedby=grid_id_rn])').highlight(highlightSearch)
+
+                // if (indexRow > $('#grid_id').getDataIDs().length - 1) {
+                // 	indexRow = $('#grid_id').getDataIDs().length - 1
+                // }
+
+            
+
+                $('#gsh_grid_id_rn').html(`
+                <button id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>  
+            `).click(function (e) {
+
+                    var grid = $("#grid_id");
+                    // Clear the filter
+                    grid.jqGrid('clearGridData');
+                    grid[0].p.search = false; //pencarian tidak sedang dilakukan
+                    $.extend(grid[0].p.postData, {
+                        filters: ""
+                    });
+                    // Reload the grid
+                    grid.trigger("reloadGrid", [{
+                        page: 1
+                    }]);
+                    e.preventDefault(); //agar tidak mereload ulang
                 })
+
+                //////////////////////////
+
+
             },
 
 
@@ -306,7 +396,7 @@ require "db.php";
             postData: {
                 filters: function () {
                     return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData")
-                    .filters);
+                        .filters);
                 }
             },
             search: true,
@@ -319,12 +409,12 @@ require "db.php";
         // '#jqGridPager', null,
         jQuery("#grid_id").jqGrid('filterToolbar', {
             defaultSearch: "cn",
-            searchOnEnter: false,//MENCARI SAAT DI KLIK ENTER FALSE
+            searchOnEnter: false, //MENCARI SAAT DI KLIK ENTER FALSE
             searchOperators: true,
             stringResult: true,
-            afterSearch: function() {
-				indexRow = 0
-			},
+            afterSearch: function () {
+                indexRow = 0
+            },
             gridComplete: function () {
                 $("#grid_id").setGridParam({
                     datatype: 'json'
@@ -332,6 +422,7 @@ require "db.php";
 
             }
         });
+
         jQuery("#grid_id").on("change keyup", function () {
             var search_value = jQuery(this).val();
             jQuery("#grid_id").setGridParam({
@@ -360,6 +451,21 @@ require "db.php";
             }
         });
 
+        // onUpKey: function() {
+        //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');
+        //     var prevRow = $("#grid_id").jqGrid('getRowData', selrow - 0);
+        //     if (prevRow !== null) {
+        //         $("#grid_id").jqGrid('setSelection', selrow + 0, true);
+        //     }
+        // },
+        // onDownKey: function() {
+        //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');
+        //     var nextRow = $("#grid_id").jqGrid('getRowData', selrow + 0);
+        //     if (nextRow !== null) {
+        //         $("#grid_id").jqGrid('setSelection', selrow - 0, true);
+        //     }
+        // }
+
 
         jQuery("#grid_id").jqGrid('navGrid', '#jqGridPager', null, {
 
@@ -373,16 +479,277 @@ require "db.php";
 
         });
 
+        /**
+         * Set Home, End, PgUp, PgDn
+         * to move grid page
+         */
+        function setCustomBindKeys(grid) {
+            $(document).on("keydown", function (e) {
+                if (activeGrid) {
+                    if (
+                        e.keyCode == 33 ||
+                        e.keyCode == 34 ||
+                        e.keyCode == 35 ||
+                        e.keyCode == 36 ||
+                        e.keyCode == 38 ||
+                        e.keyCode == 40 ||
+                        e.keyCode == 13
+                    ) {
+                        e.preventDefault();
 
-        // $('#gsh_grid_id_rn').html(`
-        // 		<button id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>	
-        // 	`).click(function() {
+                        var gridIds = $(activeGrid).getDataIDs();
+                        var selectedRow = $(activeGrid).getGridParam("selrow");
+                        var currentPage = $(activeGrid).getGridParam("page");
+                        var lastPage = $(activeGrid).getGridParam("lastpage");
+                        var currentIndex = 0;
+                        var row = $(activeGrid).jqGrid("getGridParam", "postData").rows;
 
-        // 	})
+                        for (var i = 0; i < gridIds.length; i++) {
+                            if (gridIds[i] == selectedRow) currentIndex = i;
+                        }
 
-        //               $("#clear").click(function() {
-        //   $("#grid_id")[0].clearToolbar();
-        // });
+                        if (triggerClick == false) {
+                            if (33 === e.keyCode) {
+                                if (currentPage > 1) {
+                                    $(activeGrid)
+                                        .jqGrid("setGridParam", {
+                                            page: parseInt(currentPage) - 1,
+                                        })
+                                        .trigger("reloadGrid");
+
+                                    triggerClick = true;
+                                }
+                                $(activeGrid).triggerHandler("jqGridKeyUp"), e.preventDefault();
+                            }
+                            if (34 === e.keyCode) {
+                                if (currentPage !== lastPage) {
+                                    $(activeGrid)
+                                        .jqGrid("setGridParam", {
+                                            page: parseInt(currentPage) + 1,
+                                        })
+                                        .trigger("reloadGrid");
+
+                                    triggerClick = true;
+                                }
+                                $(activeGrid).triggerHandler("jqGridKeyUp"), e.preventDefault();
+                            }
+                            if (35 === e.keyCode) {
+                                if (currentPage !== lastPage) {
+                                    $(activeGrid)
+                                        .jqGrid("setGridParam", {
+                                            page: lastPage,
+                                        })
+                                        .trigger("reloadGrid");
+                                    if (e.ctrlKey) {
+                                        if (
+                                            $(activeGrid).jqGrid("getGridParam", "selrow") !==
+                                            $("#customer")
+                                            .find(">tbody>tr.jqgrow")
+                                            .filter(":last")
+                                            .attr("id")
+                                        ) {
+                                            $(activeGrid)
+                                                .jqGrid(
+                                                    "setSelection",
+                                                    $(activeGrid)
+                                                    .find(">tbody>tr.jqgrow")
+                                                    .filter(":last")
+                                                    .attr("id")
+                                                )
+                                                .trigger("reloadGrid");
+                                        }
+                                    }
+
+                                    triggerClick = true;
+                                }
+                                if (e.ctrlKey) {
+                                    if (
+                                        $(activeGrid).jqGrid("getGridParam", "selrow") !==
+                                        $("#customer")
+                                        .find(">tbody>tr.jqgrow")
+                                        .filter(":last")
+                                        .attr("id")
+                                    ) {
+                                        $(activeGrid)
+                                            .jqGrid(
+                                                "setSelection",
+                                                $(activeGrid)
+                                                .find(">tbody>tr.jqgrow")
+                                                .filter(":last")
+                                                .attr("id")
+                                            )
+                                            .trigger("reloadGrid");
+                                    }
+                                }
+                                $(activeGrid).triggerHandler("jqGridKeyUp"), e.preventDefault();
+                            }
+                            if (36 === e.keyCode) {
+                                if (currentPage > 1) {
+                                    if (e.ctrlKey) {
+                                        if (
+                                            $(activeGrid).jqGrid("getGridParam", "selrow") !==
+                                            $("#customer")
+                                            .find(">tbody>tr.jqgrow")
+                                            .filter(":first")
+                                            .attr("id")
+                                        ) {
+                                            $(activeGrid).jqGrid(
+                                                "setSelection",
+                                                $(activeGrid)
+                                                .find(">tbody>tr.jqgrow")
+                                                .filter(":first")
+                                                .attr("id")
+                                            );
+                                        }
+                                    }
+                                    $(activeGrid)
+                                        .jqGrid("setGridParam", {
+                                            page: 1,
+                                        })
+                                        .trigger("reloadGrid");
+
+                                    triggerClick = true;
+                                }
+                                $(activeGrid).triggerHandler("jqGridKeyUp"), e.preventDefault();
+                            }
+                            if (38 === e.keyCode) {
+                                if (currentIndex - 1 >= 0) {
+                                    $(activeGrid)
+                                        .resetSelection()
+                                        .setSelection(gridIds[currentIndex - 1]);
+                                }
+                            }
+                            if (40 === e.keyCode) {
+                                if (currentIndex + 1 < gridIds.length) {
+                                    $(activeGrid)
+                                        .resetSelection()
+                                        .setSelection(gridIds[currentIndex + 1]);
+                                }
+                            }
+                            if (13 === e.keyCode) {
+                                let rowId = $(activeGrid).getGridParam("selrow");
+                                let ondblClickRowHandler = $(activeGrid).jqGrid(
+                                    "getGridParam",
+                                    "ondblClickRow"
+                                );
+
+                                if (ondblClickRowHandler) {
+                                    ondblClickRowHandler.call($(activeGrid)[0], rowId);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // function defaultBindKeys() {
+        //     $(document).keydown(function (e) {
+        //         if (
+        //             e.keyCode == 38 ||
+        //             e.keyCode == 40 ||
+        //             e.keyCode == 33 ||
+        //             e.keyCode == 34 ||
+        //             e.keyCode == 35 ||
+        //             e.keyCode == 36
+        //         ) {
+        //             e.preventDefault();
+
+        //             if (activeGrid !== undefined) {
+        //                 var gridArr = $(activeGrid).getDataIDs();
+        //                 var selrow = $(activeGrid).getGridParam("selrow");
+        //                 var curr_index = 0;
+        //                 var currentPage = $(activeGrid).getGridParam('page')
+        //                 var lastPage = $(activeGrid).getGridParam('lastpage')
+        //                 var row = $(activeGrid).jqGrid('getGridParam', 'postData').rows
+
+        //                 for (var i = 0; i < gridArr.length; i++) {
+        //                     if (gridArr[i] == selrow) curr_index = i;
+        //                 }
+
+        //                 switch (e.keyCode) {
+        //                     case 33:
+        //                         if (currentPage > 1) {
+        //                             $(activeGrid).jqGrid('setGridParam', {
+        //                                 "page": currentPage - 1
+        //                             }).trigger('reloadGrid')
+        //                         }
+        //                         break
+        //                     case 34:
+        //                         if (currentPage !== lastPage) {
+        //                             $(activeGrid).jqGrid('setGridParam', {
+        //                                 "page": currentPage + 1
+        //                             }).trigger('reloadGrid')
+        //                         }
+        //                         case 38:
+        //                             if (curr_index - 1 >= 0)
+        //                                 $(activeGrid)
+        //                                 .resetSelection()
+        //                                 .setSelection(gridArr[curr_index - 1])
+        //                             break
+        //                         case 40:
+        //                             if (curr_index + 1 < gridArr.length)
+        //                                 $(activeGrid)
+        //                                 .resetSelection()
+        //                                 .setSelection(gridArr[curr_index + 1])
+        //                             break
+        //                 }
+        //             }
+        //         }
+        //     })
+        // }
+        // function defaultBindKeys() {
+        //   $(document).keydown(function(e) {
+        //     if (
+        //       e.keyCode == 38 ||
+        //       e.keyCode == 40 ||
+        //       e.keyCode == 33 ||
+        //       e.keyCode == 34 ||
+        //       e.keyCode == 35 ||
+        //       e.keyCode == 36
+        //     ) {
+        //       e.preventDefault();
+
+        //       if (activeGrid !== undefined) {
+        //         var gridArr = $(activeGrid).getDataIDs();
+        //         var selrow = $(activeGrid).getGridParam("selrow");
+        //         var curr_index = 0;
+        //         var currentPage = $(activeGrid).getGridParam('page')
+        //         var lastPage = $(activeGrid).getGridParam('lastpage')
+        //         var row = $(activeGrid).jqGrid('getGridParam', 'postData').rows
+
+        //         for (var i = 0; i < gridArr.length; i++) {
+        //           if (gridArr[i] == selrow) curr_index = i;
+        //         }
+
+        //         switch (e.keyCode) {
+        //           case 33:
+        //             if (currentPage > 1) {
+        //               $(activeGrid).jqGrid('setGridParam', { "page": currentPage - 1 }).trigger('reloadGrid')
+        //             }
+        //             break
+        //           case 34:
+        //             if (currentPage !== lastPage) {
+        //               $(activeGrid).jqGrid('setGridParam', { "page": currentPage + 1 }).trigger('reloadGrid')
+        //             }
+        //             break
+        //         case 38:
+        // 			  		if (curr_index - 1 >= 0)
+        // 			      $(activeGrid)
+        // 			        .resetSelection()
+        // 			        .setSelection(gridArr[curr_index - 1])
+        // 			      break
+        // 			    case 40:
+        // 			    	if (curr_index + 1 < gridArr.length)
+        // 			      $(activeGrid)
+        // 			        .resetSelection()
+        // 			        .setSelection(gridArr[curr_index + 1])
+        // 			        break
+        //         }
+        //       }
+        //     }
+        //   })
+        // }
     </script>
 </body>
 
