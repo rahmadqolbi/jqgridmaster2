@@ -319,50 +319,34 @@ require "db.php";
             //         autoResizing: {
             //   compact: true
             // },
+            onSelectRow: function(id) {
+                // activeGrid = '#grid_id'
+                indexRow = $(this).jqGrid('getCell', id, 'rn') - 1
+                page = $(this).jqGrid('getGridParam', 'page') - 1
+                rows = $(this).jqGrid('getGridParam', 'postData').rows
+                if (indexRow >= rows) indexRow = (indexRow - rows * page)
 
+            },
             loadComplete: function () {
                 // bindkeys
-
                 $(document).unbind('keydown')
-                // setCustomBindKeys($(this))
-                // postData = $(this).jqGrid('getGridParam', 'postData')
-                // if (triggerClick) {
-                // 	$('#' + $('#grid_id').getDataIDs()[indexRow]).click()
-                // 	triggerClick = false
-                // } else {
-                // 	$('#grid_id').setSelection($('#grid_id').getDataIDs()[indexRow])
-                // }
                 setCustomBindKeys($(this))
-postData = $(this).jqGrid('getGridParam', 'postData')
-var rowsPerPage = $(this).jqGrid('getGridParam', 'rowNum');
-var selectedRowId = $(this).jqGrid('getGridParam', 'selrow');
-var indexRow = $(this).jqGrid('getInd', selectedRowId);
-if (triggerClick) {
-    $('#' + $(this).getDataIDs()[indexRow]).click()
-    triggerClick = false
-} else {
-    var nextIndexRow = indexRow + rowsPerPage;
-    if (nextIndexRow < $(this).getGridParam('records')) {
-        $(this).jqGrid('setSelection', $(this).getDataIDs()[nextIndexRow], false);
-    }
-}
+                postData = $(this).jqGrid('getGridParam', 'postData')
+                
+                setTimeout(function() { 
+                    
+                if (indexRow > $('#grid_id').getDataIDs().length - 1) {
+					indexRow = $('#grid_id').getDataIDs().length - 1
+				}
 
+                if (triggerClick) {
+                	$('#' + $('#grid_id').getDataIDs()[indexRow]).click()
+                	triggerClick = false
+                } else {
+                	$('#grid_id').setSelection($('#grid_id').getDataIDs()[indexRow])
+                }
 
-
-
-
-
-
-
-
-
-                //     $('#grid_id tbody tr td:not([aria-describedby=grid_id_rn])').highlight(highlightSearch)
-
-                // if (indexRow > $('#grid_id').getDataIDs().length - 1) {
-                // 	indexRow = $('#grid_id').getDataIDs().length - 1
-                // }
-
-            
+                
 
                 $('#gsh_grid_id_rn').html(`
                 <button id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>  
@@ -381,6 +365,43 @@ if (triggerClick) {
                     }]);
                     e.preventDefault(); //agar tidak mereload ulang
                 })
+
+                
+                })
+               
+//                 setCustomBindKeys($(this))
+// postData = $(this).jqGrid('getGridParam', 'postData')
+// var rowsPerPage = $(this).jqGrid('getGridParam', 'rowNum');
+// var selectedRowId = $(this).jqGrid('getGridParam', 'selrow');
+// var indexRow = $(this).jqGrid('getInd', selectedRowId);
+// if (triggerClick) {
+//     $('#' + $(this).getDataIDs()[indexRow]).click()
+//     triggerClick = false
+// } else {
+//     var nextIndexRow = indexRow + rowsPerPage;
+//     if (nextIndexRow < $(this).getGridParam('records')) {
+//         $(this).jqGrid('setSelection', $(this).getDataIDs()[nextIndexRow], false);
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+                //     $('#grid_id tbody tr td:not([aria-describedby=grid_id_rn])').highlight(highlightSearch)
+
+                // if (indexRow > $('#grid_id').getDataIDs().length - 1) {
+                // 	indexRow = $('#grid_id').getDataIDs().length - 1
+                // }
+
+            
+
+               
 
                 //////////////////////////
 
