@@ -22,7 +22,7 @@ require "db.php";
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js"></script>
-
+    <script src="highlight.js" type="text/javascript"></script>
     <!-- <script src="jquery.js"></script>
 <script src="dist/jquery.inputmask.js"></script>
 <script src="dist/inputmask.js"></script>
@@ -37,6 +37,10 @@ require "db.php";
         font-size: 12px;
         text-transform: uppercase;
     }
+    * 
+            .highlight {
+                background-color: #fbec88;
+            }
 </style>
 
 <body>
@@ -68,51 +72,36 @@ require "db.php";
             $(customerTable).setGridWidth($(window).width() - 15)
 
         })
+        $(document).on('click','#clearFilter',function()
+                {
+                    currentSearch = undefined
+                    $('[id*="gs_"]').val('')
+                    $('#grid_id').jqGrid('setGridParam', {postData: null})
+                    $('#grid_id').jqGrid('setGridParam',
+                    {
+                        postData: 
+                        {
+                            page: 1,
+                            rows: 10,
+                            sidx: 'Invoice',
+                            sord: 'asc',
+                        },
+                    })
+                    .trigger('reloadGrid')
+                    highlightSearch = 'undefined'
+                })
+
+
+      
         $(document).ready(function () {
-                $(document).on('click', '#clearFilter', function () {
-                        currentSearch = undefined
-                        $('[id*="gs_"]').val('')
-                        $(customerTable).jqGrid('setGridParam', {
-                            postData: null
-                        })
-                        $(customerTable)
-                            .jqGrid('setGridParam', {
-                                postData: {
-                                    page: 1,
-                                    rows: 10,
-                                    sidx: 'customer_name',
-                                    sord: 'asc',
-                                },
-                            })
-                            .trigger('reloadGrid')
-                        highlightSearch = 'undefined'
-                    }),
-
-
-                    $('#t_grid_id').html(`
+            $('#t_grid_id').html(`
 		<div id="global_search">
 			<label> Global search </label>
-			<input id="gs_global_search" class="ui-widget-content ui-corner-all" style="padding: 4px;" globalsearch="true" clearsearch="true">
+			<input  id="gs_global_search" class="ui-widget-content ui-corner-all" style="padding: 4px;" globalsearch="true" clearsearch="true">
 		</div>
 	`)
-            }),
-
-
-            $('#t_grid_id input').on('input', function () {
-                clearTimeout(timeout)
-
-                timeout = setTimeout(function () {
-                    indexRow = 0
-                    $(customerTable).jqGrid('setGridParam', {
-                        postData: {
-                            'global_search': highlightSearch
-                        }
-                    }).trigger('reloadGrid')
-                }, 500);
-            })
-
-
-        // stop
+})
+        
 
         $("#grid_id").jqGrid({
             datatype: 'json',
@@ -207,7 +196,7 @@ require "db.php";
                     },
                     width: 200,
                     editable: true,
-                    datafield: 'nama_pelanggan',
+                    index: 'nama_pelanggan',
                     search: true,
                     sortable: true,
                     editrules: {
@@ -224,7 +213,7 @@ require "db.php";
                 {
                     name: 'jenis_kelamin',
                     label: 'Jenis Kelamin',
-                    datafield: 'jenis_kelamin',
+                    index: 'jenis_kelamin',
                     editable: true,
                     searchoptions: {
                         sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
@@ -250,6 +239,7 @@ require "db.php";
                     name: 'saldo',
                     idName: 'number',
                     label: 'Saldo',
+                    index: 'saldo',
                     editable: true,
                     sorttype: "float",
                     formatter: 'number',
@@ -311,6 +301,7 @@ require "db.php";
             rownumWidth: 40,
             gridview: true,
             search: true,
+            ignoreCase: true,
             toolbar: [true, 'top'],
             // afterSearch: null,
             // beforeClear: null,
@@ -319,8 +310,8 @@ require "db.php";
             //         autoResizing: {
             //   compact: true
             // },
-            onSelectRow: function(id) {
-                // activeGrid = '#grid_id'
+            onSelectRow: function (id) {
+
                 indexRow = $(this).jqGrid('getCell', id, 'rn') - 1
                 page = $(this).jqGrid('getGridParam', 'page') - 1
                 rows = $(this).jqGrid('getGridParam', 'postData').rows
@@ -329,85 +320,75 @@ require "db.php";
             },
             loadComplete: function () {
                 // bindkeys
+
                 $(document).unbind('keydown')
                 setCustomBindKeys($(this))
                 postData = $(this).jqGrid('getGridParam', 'postData')
-                
-                setTimeout(function() { 
-                    
-                if (indexRow > $('#grid_id').getDataIDs().length - 1) {
-					indexRow = $('#grid_id').getDataIDs().length - 1
-				}
 
-                if (triggerClick) {
-                	$('#' + $('#grid_id').getDataIDs()[indexRow]).click()
-                	triggerClick = false
-                } else {
-                	$('#grid_id').setSelection($('#grid_id').getDataIDs()[indexRow])
-                }
+                setTimeout(function () {
+                    $('#grid_id tbody tr td:not([aria-describedby=grid_id_rn])').highlight(highlightSearch)
+                    if (indexRow > $('#grid_id').getDataIDs().length - 1) {
+                        indexRow = $('#grid_id').getDataIDs().length - 1
+                    }
 
-                
-
-                $('#gsh_grid_id_rn').html(`
-                <button id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>  
-            `).click(function (e) {
-
-                    var grid = $("#grid_id");
-                    // Clear the filter
-                    grid.jqGrid('clearGridData');
-                    grid[0].p.search = false; //pencarian tidak sedang dilakukan
-                    $.extend(grid[0].p.postData, {
-                        filters: ""
-                    });
-                    // Reload the grid
-                    grid.trigger("reloadGrid", [{
-                        page: 1
-                    }]);
-                    e.preventDefault(); //agar tidak mereload ulang
-                })
-
-                
-                })
-               
-//                 setCustomBindKeys($(this))
-// postData = $(this).jqGrid('getGridParam', 'postData')
-// var rowsPerPage = $(this).jqGrid('getGridParam', 'rowNum');
-// var selectedRowId = $(this).jqGrid('getGridParam', 'selrow');
-// var indexRow = $(this).jqGrid('getInd', selectedRowId);
-// if (triggerClick) {
-//     $('#' + $(this).getDataIDs()[indexRow]).click()
-//     triggerClick = false
-// } else {
-//     var nextIndexRow = indexRow + rowsPerPage;
-//     if (nextIndexRow < $(this).getGridParam('records')) {
-//         $(this).jqGrid('setSelection', $(this).getDataIDs()[nextIndexRow], false);
-//     }
-// }
+                    if (triggerClick) {
+                        $('#' + $('#grid_id').getDataIDs()[indexRow]).click()
+                        triggerClick = false
+                    } else {
+                        $('#grid_id').setSelection($('#grid_id').getDataIDs()[indexRow])
+                    }
 
 
+                    $('#gsh_grid_id_rn').html(`
+                                <button type="button" id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>
+                            `).click(function(){})
+                            $('[id*=gs_]').on('input', function() 
+                            {
+                                highlightSearch = $(this).val()
+                            })
+                    $('[id*=gs_]').on('input', function () {
+                        highlightSearch = $(this).val()
+                        clearTimeout(timeout)
 
+                        timeout = setTimeout(function () {
+                            $('#grid_id').trigger('reloadGrid')
+                        }, 500);
+                    })
 
+                    $('#t_grid_id input').on('input', function () {
 
+                        clearTimeout(timeout)
 
-
-
-
-
-                //     $('#grid_id tbody tr td:not([aria-describedby=grid_id_rn])').highlight(highlightSearch)
-
-                // if (indexRow > $('#grid_id').getDataIDs().length - 1) {
-                // 	indexRow = $('#grid_id').getDataIDs().length - 1
-                // }
-
-            
-
-               
-
-                //////////////////////////
-
-
+                        timeout = setTimeout(function () {
+                            indexRow = 0
+                            $(customerTable).jqGrid('setGridParam', {
+                                postData: {
+                                    'global_search': highlightSearch
+                                }
+                            }).trigger('reloadGrid')
+                        }, 400);
+                    })
+                    $('input')
+                        .css('text-transform', 'uppercase')
+                        .attr('autocomplete', 'off')
+                }, 50)
             },
-
+            //cara buat parameter sendiri di jqgrid
+            postData: {
+                searchField: "",
+                searchOper: "",
+                searchString: ""
+            },
+            postData: {
+                global_search: function () {
+                    return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData")
+                        .global_search);
+                }
+            },
+            search: "gSearch",
+            postData: {
+                global_search: ""
+            },
 
             postData: {
                 searchField: "",
@@ -472,6 +453,25 @@ require "db.php";
             }
         });
 
+        // konfigurasi jqgrid untuk membuat kolom pencarian
+        //         $('#grid_id').jqGrid('navGrid', '#jqGridPager', {}, {}, {},
+        //     {
+        //         multipleSearch: true,
+        //         multipleGroup: true,
+        //         recreateFilter: true,
+        //         closeOnEscape: true,
+        //         closeAfterSearch: true,
+        //         closeAfterReset: true,
+        //         closeOnSubmit: true,
+        //         searchOnEnter: false,
+        //         width: 800,
+        //         onSearch: function() {
+        //             var postData = $('#grid_id').jqGrid('getGridParam', 'postData');
+        //             postData.gs_global_search = $('#gs_global_search').val();
+        //         }
+        //     }
+        // );
+
         // onUpKey: function() {
         //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');
         //     var prevRow = $("#grid_id").jqGrid('getRowData', selrow - 0);
@@ -493,6 +493,12 @@ require "db.php";
             recreateForm: true,
             beforeShowForm: function (form) {
                 form[0].querySelector('#no_invoice').setAttribute('readonly', 'readonly')
+
+                // let id = form.find('#id').val();
+                // let id = form.find('#no_invoice').val();
+                // let id = form.find('#tgl_pembelian').val();
+                // let id = form.find('#nama_pelanggan').val();
+                // console.log(form.find('#id').val(id.replace('<span class="highlight">', '').replace('</span>', '')));
             }
 
         }, {
@@ -663,114 +669,6 @@ require "db.php";
                 }
             });
         }
-
-        // function defaultBindKeys() {
-        //     $(document).keydown(function (e) {
-        //         if (
-        //             e.keyCode == 38 ||
-        //             e.keyCode == 40 ||
-        //             e.keyCode == 33 ||
-        //             e.keyCode == 34 ||
-        //             e.keyCode == 35 ||
-        //             e.keyCode == 36
-        //         ) {
-        //             e.preventDefault();
-
-        //             if (activeGrid !== undefined) {
-        //                 var gridArr = $(activeGrid).getDataIDs();
-        //                 var selrow = $(activeGrid).getGridParam("selrow");
-        //                 var curr_index = 0;
-        //                 var currentPage = $(activeGrid).getGridParam('page')
-        //                 var lastPage = $(activeGrid).getGridParam('lastpage')
-        //                 var row = $(activeGrid).jqGrid('getGridParam', 'postData').rows
-
-        //                 for (var i = 0; i < gridArr.length; i++) {
-        //                     if (gridArr[i] == selrow) curr_index = i;
-        //                 }
-
-        //                 switch (e.keyCode) {
-        //                     case 33:
-        //                         if (currentPage > 1) {
-        //                             $(activeGrid).jqGrid('setGridParam', {
-        //                                 "page": currentPage - 1
-        //                             }).trigger('reloadGrid')
-        //                         }
-        //                         break
-        //                     case 34:
-        //                         if (currentPage !== lastPage) {
-        //                             $(activeGrid).jqGrid('setGridParam', {
-        //                                 "page": currentPage + 1
-        //                             }).trigger('reloadGrid')
-        //                         }
-        //                         case 38:
-        //                             if (curr_index - 1 >= 0)
-        //                                 $(activeGrid)
-        //                                 .resetSelection()
-        //                                 .setSelection(gridArr[curr_index - 1])
-        //                             break
-        //                         case 40:
-        //                             if (curr_index + 1 < gridArr.length)
-        //                                 $(activeGrid)
-        //                                 .resetSelection()
-        //                                 .setSelection(gridArr[curr_index + 1])
-        //                             break
-        //                 }
-        //             }
-        //         }
-        //     })
-        // }
-        // function defaultBindKeys() {
-        //   $(document).keydown(function(e) {
-        //     if (
-        //       e.keyCode == 38 ||
-        //       e.keyCode == 40 ||
-        //       e.keyCode == 33 ||
-        //       e.keyCode == 34 ||
-        //       e.keyCode == 35 ||
-        //       e.keyCode == 36
-        //     ) {
-        //       e.preventDefault();
-
-        //       if (activeGrid !== undefined) {
-        //         var gridArr = $(activeGrid).getDataIDs();
-        //         var selrow = $(activeGrid).getGridParam("selrow");
-        //         var curr_index = 0;
-        //         var currentPage = $(activeGrid).getGridParam('page')
-        //         var lastPage = $(activeGrid).getGridParam('lastpage')
-        //         var row = $(activeGrid).jqGrid('getGridParam', 'postData').rows
-
-        //         for (var i = 0; i < gridArr.length; i++) {
-        //           if (gridArr[i] == selrow) curr_index = i;
-        //         }
-
-        //         switch (e.keyCode) {
-        //           case 33:
-        //             if (currentPage > 1) {
-        //               $(activeGrid).jqGrid('setGridParam', { "page": currentPage - 1 }).trigger('reloadGrid')
-        //             }
-        //             break
-        //           case 34:
-        //             if (currentPage !== lastPage) {
-        //               $(activeGrid).jqGrid('setGridParam', { "page": currentPage + 1 }).trigger('reloadGrid')
-        //             }
-        //             break
-        //         case 38:
-        // 			  		if (curr_index - 1 >= 0)
-        // 			      $(activeGrid)
-        // 			        .resetSelection()
-        // 			        .setSelection(gridArr[curr_index - 1])
-        // 			      break
-        // 			    case 40:
-        // 			    	if (curr_index + 1 < gridArr.length)
-        // 			      $(activeGrid)
-        // 			        .resetSelection()
-        // 			        .setSelection(gridArr[curr_index + 1])
-        // 			        break
-        //         }
-        //       }
-        //     }
-        //   })
-        // }
     </script>
 </body>
 
