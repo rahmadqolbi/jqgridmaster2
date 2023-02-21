@@ -68,6 +68,20 @@ require "db.php";
         let triggerClick = true
         let activeGrid = '#grid_id'
         let socket
+        const form = document.querySelector('form');
+const table = document.querySelector('table');
+
+// menambahkan event listener pada form untuk menangkap event submit
+form.addEventListener('submit', function(event) {
+  // mencegah perilaku default dari event submit
+  event.preventDefault();
+
+  // menetapkan fokus pada elemen pertama pada tabel
+  const firstCell = table.querySelector('td');
+  if (firstCell) {
+    firstCell.focus();
+  }
+});
         $(window).resize(function () {
             $(customerTable).setGridWidth($(window).width() - 15)
 
@@ -191,6 +205,7 @@ require "db.php";
                 {
                     name: 'nama_pelanggan',
                     label: 'Nama Pelanggan',
+                    
                     searchoptions: {
                         sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
                     },
@@ -293,7 +308,7 @@ require "db.php";
             pager: "#jqGridPager",
             caption: "Master Penjualan",
             sortname: 'id',
-            // autoencode: true,
+            autoencode: true,
             sortorder: 'asc',
             height: 'auto',
             // loadonce: false,
@@ -303,13 +318,7 @@ require "db.php";
             search: true,
             ignoreCase: true,
             toolbar: [true, 'top'],
-            // afterSearch: null,
-            // beforeClear: null,
-            // afterClear: null,
-            // onClearSearchValue: null,
-            //         autoResizing: {
-            //   compact: true
-            // },
+         
             onSelectRow: function (id) {
 
                 indexRow = $(this).jqGrid('getCell', id, 'rn') - 1
@@ -452,25 +461,30 @@ require "db.php";
 
             }
         });
-
+        // bagaimana membuat input data dapat terlihat dibaris pertama ketika disubmit
         // konfigurasi jqgrid untuk membuat kolom pencarian
-        //         $('#grid_id').jqGrid('navGrid', '#jqGridPager', {}, {}, {},
-        //     {
-        //         multipleSearch: true,
-        //         multipleGroup: true,
-        //         recreateFilter: true,
-        //         closeOnEscape: true,
-        //         closeAfterSearch: true,
-        //         closeAfterReset: true,
-        //         closeOnSubmit: true,
-        //         searchOnEnter: false,
-        //         width: 800,
-        //         onSearch: function() {
-        //             var postData = $('#grid_id').jqGrid('getGridParam', 'postData');
-        //             postData.gs_global_search = $('#gs_global_search').val();
-        //         }
-        //     }
-        // );
+        $("#grid_id").jqGrid({
+  // konfigurasi jQGrid lainnya
+  pager: "#jqGridPager",
+  inlineNav: {
+    add: true, // menampilkan tombol Tambah
+    edit: false, // tidak menampilkan tombol Edit
+    save: true, // menampilkan tombol Simpan
+    cancel: true, // menampilkan tombol Batal
+    addParams: {
+      rowID: "new_row", // memberikan ID pada baris yang akan ditambahkan
+      useFormatter: false, // menggunakan form input bawaan jQGrid
+      addRowParams: {
+        // konfigurasi form input
+        position: "first", // menampilkan form di baris pertama
+        addRow: "top", // menambahkan baris di bagian atas grid
+        keys: true, // memungkinkan pengguna untuk menekan tombol Enter untuk menyimpan
+        closeOnEscape: true,
+         // menutup form ketika pengguna menekan tombol Escape
+      }
+    }
+  }
+});
 
         // onUpKey: function() {
         //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');

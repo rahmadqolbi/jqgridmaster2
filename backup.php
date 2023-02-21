@@ -22,7 +22,7 @@ require "db.php";
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js"></script>
-
+    <script src="highlight.js" type="text/javascript"></script>
     <!-- <script src="jquery.js"></script>
 <script src="dist/jquery.inputmask.js"></script>
 <script src="dist/inputmask.js"></script>
@@ -37,6 +37,10 @@ require "db.php";
         font-size: 12px;
         text-transform: uppercase;
     }
+    * 
+            .highlight {
+                background-color: #fbec88;
+            }
 </style>
 
 <body>
@@ -64,6 +68,20 @@ require "db.php";
         let triggerClick = true
         let activeGrid = '#grid_id'
         let socket
+        const form = document.querySelector('form');
+const table = document.querySelector('table');
+
+// menambahkan event listener pada form untuk menangkap event submit
+form.addEventListener('submit', function(event) {
+  // mencegah perilaku default dari event submit
+  event.preventDefault();
+
+  // menetapkan fokus pada elemen pertama pada tabel
+  const firstCell = table.querySelector('td');
+  if (firstCell) {
+    firstCell.focus();
+  }
+});
         $(window).resize(function () {
             $(customerTable).setGridWidth($(window).width() - 15)
 
@@ -97,51 +115,7 @@ require "db.php";
 		</div>
 	`)
 })
-            // $(document).on('input', '#gsearch', function () {
-            //     let text = $(this).val()
-
-            //     //ada banyak parameter grid, salah satunya postData. untuk nngeliat bisa bikin getGridParam
-            //     //untuk nambahin isi dari parameternya bisa dibuat pake setGridParam
-            //     //jadi untuk search, set dulu data baru untuk param postData. lalu di trigger dengan reloadGrid
-            //     //maka setelah itu, isi param postData bisa bertambah sesuai yg diinginkan
-            //     $('#grid_id').jqGrid('setGridParam', {
-            //         search: 'gSearch',
-            //         postData: {
-            //             global_search: text
-            //         }
-            //     }).trigger('reloadGrid')
-
-            // })
         
-
-
-        // $('[id*=gs_]').on('input', function() {
-        // 		highlightSearch = $(this).val()
-        // 		clearTimeout(timeout)
-
-        // 		timeout = setTimeout(function() {
-        // 		$('#grid_id').trigger('reloadGrid')
-        // 		}, 500);
-        // 	})
-
-        // $(document).on('input', '#t_grid_id input', function () {
-
-        //     clearTimeout(timeout)
-
-        //     timeout = setTimeout(function () {
-        //         indexRow = 0
-        //         $(customerTable).jqGrid('setGridParam', {
-        //             postData: {
-        //                 'global_search': highlightSearch
-        //             }
-        //         }).trigger('reloadGrid')
-        //     }, 500);
-
-        // })
-
-
-
-        // stop
 
         $("#grid_id").jqGrid({
             datatype: 'json',
@@ -231,12 +205,13 @@ require "db.php";
                 {
                     name: 'nama_pelanggan',
                     label: 'Nama Pelanggan',
+                    
                     searchoptions: {
                         sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
                     },
                     width: 200,
                     editable: true,
-                    datafield: 'nama_pelanggan',
+                    index: 'nama_pelanggan',
                     search: true,
                     sortable: true,
                     editrules: {
@@ -253,7 +228,7 @@ require "db.php";
                 {
                     name: 'jenis_kelamin',
                     label: 'Jenis Kelamin',
-                    datafield: 'jenis_kelamin',
+                    index: 'jenis_kelamin',
                     editable: true,
                     searchoptions: {
                         sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
@@ -279,6 +254,7 @@ require "db.php";
                     name: 'saldo',
                     idName: 'number',
                     label: 'Saldo',
+                    index: 'saldo',
                     editable: true,
                     sorttype: "float",
                     formatter: 'number',
@@ -332,7 +308,7 @@ require "db.php";
             pager: "#jqGridPager",
             caption: "Master Penjualan",
             sortname: 'id',
-            // autoencode: true,
+            autoencode: true,
             sortorder: 'asc',
             height: 'auto',
             // loadonce: false,
@@ -340,14 +316,9 @@ require "db.php";
             rownumWidth: 40,
             gridview: true,
             search: true,
+            ignoreCase: true,
             toolbar: [true, 'top'],
-            // afterSearch: null,
-            // beforeClear: null,
-            // afterClear: null,
-            // onClearSearchValue: null,
-            //         autoResizing: {
-            //   compact: true
-            // },
+         
             onSelectRow: function (id) {
 
                 indexRow = $(this).jqGrid('getCell', id, 'rn') - 1
@@ -364,7 +335,7 @@ require "db.php";
                 postData = $(this).jqGrid('getGridParam', 'postData')
 
                 setTimeout(function () {
-                    // $('#customer tbody tr td:not([aria-describedby=customer_rn])').highlight(highlightSearch)
+                    $('#grid_id tbody tr td:not([aria-describedby=grid_id_rn])').highlight(highlightSearch)
                     if (indexRow > $('#grid_id').getDataIDs().length - 1) {
                         indexRow = $('#grid_id').getDataIDs().length - 1
                     }
@@ -384,7 +355,6 @@ require "db.php";
                             {
                                 highlightSearch = $(this).val()
                             })
-
                     $('[id*=gs_]').on('input', function () {
                         highlightSearch = $(this).val()
                         clearTimeout(timeout)
@@ -491,25 +461,30 @@ require "db.php";
 
             }
         });
-
+        // bagaimana membuat input data dapat terlihat dibaris pertama ketika disubmit
         // konfigurasi jqgrid untuk membuat kolom pencarian
-        //         $('#grid_id').jqGrid('navGrid', '#jqGridPager', {}, {}, {},
-        //     {
-        //         multipleSearch: true,
-        //         multipleGroup: true,
-        //         recreateFilter: true,
-        //         closeOnEscape: true,
-        //         closeAfterSearch: true,
-        //         closeAfterReset: true,
-        //         closeOnSubmit: true,
-        //         searchOnEnter: false,
-        //         width: 800,
-        //         onSearch: function() {
-        //             var postData = $('#grid_id').jqGrid('getGridParam', 'postData');
-        //             postData.gs_global_search = $('#gs_global_search').val();
-        //         }
-        //     }
-        // );
+        $("#grid_id").jqGrid({
+  // konfigurasi jQGrid lainnya
+  pager: "#jqGridPager",
+  inlineNav: {
+    add: true, // menampilkan tombol Tambah
+    edit: false, // tidak menampilkan tombol Edit
+    save: true, // menampilkan tombol Simpan
+    cancel: true, // menampilkan tombol Batal
+    addParams: {
+      rowID: "new_row", // memberikan ID pada baris yang akan ditambahkan
+      useFormatter: false, // menggunakan form input bawaan jQGrid
+      addRowParams: {
+        // konfigurasi form input
+        position: "first", // menampilkan form di baris pertama
+        addRow: "top", // menambahkan baris di bagian atas grid
+        keys: true, // memungkinkan pengguna untuk menekan tombol Enter untuk menyimpan
+        closeOnEscape: true,
+         // menutup form ketika pengguna menekan tombol Escape
+      }
+    }
+  }
+});
 
         // onUpKey: function() {
         //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');
@@ -532,6 +507,12 @@ require "db.php";
             recreateForm: true,
             beforeShowForm: function (form) {
                 form[0].querySelector('#no_invoice').setAttribute('readonly', 'readonly')
+
+                // let id = form.find('#id').val();
+                // let id = form.find('#no_invoice').val();
+                // let id = form.find('#tgl_pembelian').val();
+                // let id = form.find('#nama_pelanggan').val();
+                // console.log(form.find('#id').val(id.replace('<span class="highlight">', '').replace('</span>', '')));
             }
 
         }, {
