@@ -123,6 +123,7 @@ form.addEventListener('submit', function(event) {
             pager: '#jqGridPager',
             emptyrecords: "Nothing to display",
             mtype: 'GET',
+            // mtype: 'POST',
             editurl: 'update.php',
             colModel: [
 
@@ -317,6 +318,7 @@ form.addEventListener('submit', function(event) {
             gridview: true,
             search: true,
             ignoreCase: true,
+            shrinkToFit: true,
             toolbar: [true, 'top'],
          
             onSelectRow: function (id) {
@@ -329,7 +331,7 @@ form.addEventListener('submit', function(event) {
             },
             loadComplete: function () {
                 // bindkeys
-
+             
                 $(document).unbind('keydown')
                 setCustomBindKeys($(this))
                 postData = $(this).jqGrid('getGridParam', 'postData')
@@ -416,6 +418,17 @@ form.addEventListener('submit', function(event) {
             }
 
         });
+//         $("grid_id").click(function() {
+//     // Menambahkan baris baru pada tabel
+//     $("#grid_id").jqGrid("editGridRow", "new", {
+//       height: 250,
+//       addRowParams: {
+//         position: "first"
+//       },
+//       reloadAfterSubmit: true
+//     });
+//   });
+// selected row after crud
 
         // '#jqGridPager', null,
         jQuery("#grid_id").jqGrid('filterToolbar', {
@@ -504,7 +517,7 @@ form.addEventListener('submit', function(event) {
 
         jQuery("#grid_id").jqGrid('navGrid', '#jqGridPager', null, {
 
-            recreateForm: true,
+            recreateForm: true, //formulir akan dibuat ulang setiap kali dialog diaktifkan dengan opsi baru dari colModel
             beforeShowForm: function (form) {
                 form[0].querySelector('#no_invoice').setAttribute('readonly', 'readonly')
 

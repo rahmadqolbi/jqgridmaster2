@@ -110,7 +110,7 @@ $limit = $_GET['rows']; // get how many rows we want to have into the grid
 $sidx = $_GET['sidx']; // get index row - i.e. user click to sort
 $sord = $_GET['sord']; // get the direction
 
-
+  
 $result = mysqli_query($koneksi,"SELECT COUNT(*) AS count FROM penjualan");
 $row = mysqli_fetch_array($result);
 $count = $row['count'];
