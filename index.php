@@ -86,26 +86,28 @@ form.addEventListener('submit', function(event) {
             $(customerTable).setGridWidth($(window).width() - 15)
 
         })
-        $(document).on('click','#clearFilter',function()
-                {
-                    currentSearch = undefined
-                    $('[id*="gs_"]').val('')
-                    $('#grid_id').jqGrid('setGridParam', {postData: null})
-                    $('#grid_id').jqGrid('setGridParam',
-                    {
-                        postData: 
-                        {
-                            page: 1,
-                            rows: 10,
-                            sidx: 'Invoice',
-                            sord: 'asc',
-                        },
-                    })
-                    .trigger('reloadGrid')
-                    highlightSearch = 'undefined'
-                })
-
-
+     
+        $(document).on('click', '#clearFilter', function () {
+		currentSearch = undefined
+	  $('[id*="gs_"]').val('')
+	  $(customerTable).jqGrid('setGridParam', { postData: null })
+	  $(customerTable)
+	    .jqGrid('setGridParam', {
+	      postData: {
+	        page: 1,
+	        rows: 10,
+	        sidx: 'customer_name',
+	        sord: 'asc',
+	      },
+	    })
+	    .trigger('reloadGrid')
+	  highlightSearch = 'undefined'
+	})
+    $('[id*=gs_]').each(function(i, el) {
+		$(el).on('focus', function(el) {
+			currentSearch = $(this)
+		})
+	})
       
         $(document).ready(function () {
             $('#t_grid_id').html(`
@@ -115,6 +117,11 @@ form.addEventListener('submit', function(event) {
 		</div>
 	`)
 })
+function highlightRow(rowId, response) {
+  // Menambahkan kelas CSS pada baris yang baru saja dimasukkan
+  $("#" + rowId).addClass("highlight");
+}
+
         
 
         $("#grid_id").jqGrid({
@@ -317,6 +324,7 @@ form.addEventListener('submit', function(event) {
             rownumWidth: 40,
             gridview: true,
             search: true,
+            // afterSubmit: highlightRow,
             ignoreCase: true,
             shrinkToFit: true,
             toolbar: [true, 'top'],
@@ -352,11 +360,19 @@ form.addEventListener('submit', function(event) {
 
                     $('#gsh_grid_id_rn').html(`
                                 <button type="button" id="clearFilter" title="Clear Filter" style="width: 100%; height: 100%;"> X </button>
-                            `).click(function(){})
-                            $('[id*=gs_]').on('input', function() 
-                            {
-                                highlightSearch = $(this).val()
-                            })
+                            `).click(function() {
+          var grid = $("#jqGrid");
+
+          // Clear the filter
+          grid.jqGrid('clearGridData');
+          grid[0].p.search = false;
+          $.extend(grid[0].p.postData, {filters: ""});
+        
+          // Reload the grid
+          grid.trigger("reloadGrid");
+	  		})
+
+
                     $('[id*=gs_]').on('input', function () {
                         highlightSearch = $(this).val()
                         clearTimeout(timeout)
@@ -377,7 +393,7 @@ form.addEventListener('submit', function(event) {
                                     'global_search': highlightSearch
                                 }
                             }).trigger('reloadGrid')
-                        }, 400);
+                        }, 500);
                     })
                     $('input')
                         .css('text-transform', 'uppercase')
@@ -447,6 +463,42 @@ form.addEventListener('submit', function(event) {
             }
         });
 
+        $("#grid_id").jqGrid({
+  // konfigurasi jQGrid lainnya
+  onSelectRow: function(id) {
+    var rowData = $(this).getRowData(id);
+    // mengisi nilai input form dengan data yang dipilih
+    $('#id').val(rowData.id);
+    $('#no_invoice').val(rowData.no_invoice);
+    $('#nama_pelanggan').val(rowData.nama_pelanggan);
+    $('#jenis_kelamin').val(rowData.jenis_kelamin);
+    $('#saldo').val(rowData.saldo);
+    $('#tgl_pembelian').val(rowData.tgl_pembelian);
+
+    // menyimpan ID baris yang dipilih untuk operasi CRUD
+    var selectedRowId = id;
+    if(response.code === 1) {
+  // menampilkan pesan sukses
+  alert(response.message);
+
+  // memilih kembali baris yang dipilih sebelumnya
+  $("#grid_id").setSelection(response.selectedRowId);
+}
+  }
+});
+var selectedRowId = $("#grid_id").jqGrid('getGridParam', 'selrow');
+
+// Perbarui data grid dengan memuat ulang grid
+$("#grid_id").trigger('reloadGrid');
+
+// Pilih kembali baris yang sama yang dipilih sebelumnya
+if (selectedRowId !== null) {
+  $("#grid_id").jqGrid('setSelection', selectedRowId, true);
+}
+
+
+
+
         jQuery("#grid_id").on("change keyup", function () {
             var search_value = jQuery(this).val();
             jQuery("#grid_id").setGridParam({
@@ -476,28 +528,31 @@ form.addEventListener('submit', function(event) {
         });
         // bagaimana membuat input data dapat terlihat dibaris pertama ketika disubmit
         // konfigurasi jqgrid untuk membuat kolom pencarian
-        $("#grid_id").jqGrid({
-  // konfigurasi jQGrid lainnya
-  pager: "#jqGridPager",
-  inlineNav: {
-    add: true, // menampilkan tombol Tambah
-    edit: false, // tidak menampilkan tombol Edit
-    save: true, // menampilkan tombol Simpan
-    cancel: true, // menampilkan tombol Batal
-    addParams: {
-      rowID: "new_row", // memberikan ID pada baris yang akan ditambahkan
-      useFormatter: false, // menggunakan form input bawaan jQGrid
-      addRowParams: {
-        // konfigurasi form input
-        position: "first", // menampilkan form di baris pertama
-        addRow: "top", // menambahkan baris di bagian atas grid
-        keys: true, // memungkinkan pengguna untuk menekan tombol Enter untuk menyimpan
-        closeOnEscape: true,
-         // menutup form ketika pengguna menekan tombol Escape
-      }
-    }
-  }
-});
+//         $("#grid_id").jqGrid({
+//   // konfigurasi jQGrid lainnya
+//   pager: "#jqGridPager",
+//   inlineNav: {
+//     add: true, // menampilkan tombol Tambah
+//     edit: false, // tidak menampilkan tombol Edit
+//     save: true, // menampilkan tombol Simpan
+//     cancel: true, // menampilkan tombol Batal
+//     addParams: {
+//       rowID: "new_row", // memberikan ID pada baris yang akan ditambahkan
+//       useFormatter: false, // menggunakan form input bawaan jQGrid
+//       addRowParams: {
+//         // konfigurasi form input
+//         position: "first", // menampilkan form di baris pertama
+//         addRow: "top", // menambahkan baris di bagian atas grid
+//         keys: true, // memungkinkan pengguna untuk menekan tombol Enter untuk menyimpan
+//         closeOnEscape: true,
+//          // menutup form ketika pengguna menekan tombol Escape
+//       }
+//     }
+//   }
+// });
+
+// var lastRow = $("#grid_id").jqGrid("getGridParam", "records");
+// $("#grid_id").setSelection(lastRow);
 
         // onUpKey: function() {
         //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');
@@ -513,19 +568,46 @@ form.addEventListener('submit', function(event) {
         //         $("#grid_id").jqGrid('setSelection', selrow - 0, true);
         //     }
         // }
-
+        
 
         jQuery("#grid_id").jqGrid('navGrid', '#jqGridPager', null, {
 
             recreateForm: true, //formulir akan dibuat ulang setiap kali dialog diaktifkan dengan opsi baru dari colModel
             beforeShowForm: function (form) {
                 form[0].querySelector('#no_invoice').setAttribute('readonly', 'readonly')
+                // var input = document.getElementById("no_invoice").value;
+                // var inputBaru = input.replace('<span class="highlight"></span>', ""); // Menghapus kataHapus dari input menggunakan replace()
+                //  document.getElementById("no_invoice").value = inputBaru;
+                var nilaiAsli = "";
+                var no_invoice = document.getElementById("no_invoice"); // Ambil element input no_invoice
+                var tgl_pembelian = document.getElementById("tgl_pembelian"); // Ambil element input tgl_pembelian
+                var nama_pelanggan = document.getElementById("nama_pelanggan"); // Ambil element input nama_pelanggan
+                var jenis_kelamin = document.getElementById("jenis_kelamin"); // Ambil element input jenis_kelamin
+                var saldo = document.getElementById("saldo");// Ambil element input saldo
 
-                // let id = form.find('#id').val();
-                // let id = form.find('#no_invoice').val();
-                // let id = form.find('#tgl_pembelian').val();
-                // let id = form.find('#nama_pelanggan').val();
-                // console.log(form.find('#id').val(id.replace('<span class="highlight">', '').replace('</span>', '')));
+                nilaiAsli = no_invoice.value; // Simpan nilai asli dari input pada variabel nilaiAsli
+                var inputBaru = no_invoice.value.replace(/<[^>]+>/g, ""); // Menghapus elemen tag HTML dari input menggunakan regex
+                no_invoice.value = inputBaru; // Tampilkan input yang telah diubah
+
+                nilaiAsli = tgl_pembelian.value; // Simpan nilai asli dari input pada variabel nilaiAsli
+                var inputBaru = tgl_pembelian.value.replace(/<[^>]+>/g, ""); // Menghapus elemen tag HTML dari input menggunakan regex
+                tgl_pembelian.value = inputBaru; // Tampilkan input yang telah diubah
+
+                nilaiAsli = nama_pelanggan.value; // Simpan nilai asli dari input pada variabel nilaiAsli
+                var inputBaru = nama_pelanggan.value.replace(/<[^>]+>/g, ""); // Menghapus elemen tag HTML dari input menggunakan regex
+                nama_pelanggan.value = inputBaru; // Tampilkan input yang telah diubah
+
+                nilaiAsli = jenis_kelamin.value; // Simpan nilai asli dari input pada variabel nilaiAsli
+                var inputBaru = jenis_kelamin.value.replace(/<[^>]+>/g, ""); // Menghapus elemen tag HTML dari input menggunakan regex
+                jenis_kelamin.value = inputBaru; // Tampilkan input yang telah diubah
+
+                nilaiAsli = saldo.value; // Simpan nilai asli dari input pada variabel nilaiAsli
+                var inputBaru = saldo.value.replace(/<[^>]+>/g, ""); // Menghapus elemen tag HTML dari input menggunakan regex
+                saldo.value = inputBaru; // Tampilkan input yang telah diubah
+
+
+
+             
             }
 
         }, {

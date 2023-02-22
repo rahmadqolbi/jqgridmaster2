@@ -25,7 +25,7 @@ require "db.php";
             $response['message'] = "Failed! Data Not Inserted";
             }
         
-        echo json_encode($response);
+        // echo json_encode($response);
         
         }elseif($_POST['oper'] == 'edit'){
             $id = $_POST['id'];
@@ -51,7 +51,7 @@ require "db.php";
                   $respose['message'] = "Updated Failed";
                 }
               
-                echo json_encode($respose);
+                // echo json_encode($respose);
               
             }
         }elseif($_POST['oper'] == 'del'){
@@ -77,7 +77,7 @@ if($rows > 0)
   $respose['message'] = "Failed to Delete, data Not Found";
 }
 
-
+$response['selectedRowId'] = $selectedRowId;
 echo json_encode($respose);
 }
 
