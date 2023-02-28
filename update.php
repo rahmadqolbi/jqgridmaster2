@@ -6,7 +6,7 @@ require "db.php";
     global $koneksi;
     if($_POST['oper'] == 'add'){
         $id = $_POST['id'];
-        $no_invoice = strtoupper($_POST['no_invoice']);
+        $no_invoice = isset($_POST['no_invoice']) ? strtoupper($_POST['no_invoice']) : null;
         $nama_pelanggan = strtoupper($_POST['nama_pelanggan']);
         $jenis_kelamin = $_POST['jenis_kelamin'];
         $saldo = $_POST['saldo'];
@@ -14,12 +14,14 @@ require "db.php";
         $tgl_pembelian = $_POST['tgl_pembelian'];
         $newDate = date("Y-m-d", strtotime($tgl_pembelian));
         $insert = "INSERT INTO penjualan(no_invoice,nama_pelanggan,jenis_kelamin,saldo, tgl_pembelian) VALUES ('$no_invoice','$nama_pelanggan','$jenis_kelamin','$saltik','$newDate')";
+        $last_id = mysqli_insert_id($koneksi);
         $exeinsert = mysqli_query($koneksi,$insert);
             $response = array();
             if($exeinsert)
             {
             $response['code'] =1;
             $response['message'] = "Success! Data Inserted";
+            $response['last_id'] = mysqli_insert_id($koneksi);
             }else{
             $response['code'] =0;
             $response['message'] = "Failed! Data Not Inserted";
@@ -40,18 +42,18 @@ require "db.php";
             $rows = mysqli_num_rows($getdata);
             $update = "UPDATE penjualan SET id='$id', nama_pelanggan='$nama_pelanggan',jenis_kelamin='$jenis_kelamin', saldo='$saltik', tgl_pembelian='$newDate' WHERE id='$id'";
             $exequery = mysqli_query($koneksi,$update);
-            $respose = array();
+            $response = array();
             if($rows > 0){
                 if($exequery)
                 {
-                  $respose['code'] = 1;
-                  $respose['message'] = "Updated Success";
+                  $response['code'] = 1;
+                  $response['message'] = "Updated Success";
                 }else{
-                  $respose['code'] = 0;
-                  $respose['message'] = "Updated Failed";
+                  $response['code'] = 0;
+                  $response['message'] = "Updated Failed";
                 }
               
-                // echo json_encode($respose);
+                
               
             }
         }elseif($_POST['oper'] == 'del'){
@@ -62,23 +64,24 @@ $rows = mysqli_num_rows($getdata);
 $delete = "DELETE FROM penjualan WHERE id = '$id'";
 $exedelete = mysqli_query($koneksi,$delete);
 
-$respose = array();
+$response = array();
 if($rows > 0)
 {
   if ($exedelete) {
-    $respose['code'] = 1;
-    $respose['message'] = "Deleted Success";
+    $response['code'] = 1;
+    $response['message'] = "Deleted Success";
   }else{
-    $respose['code'] = 0;
-    $respose['message'] = "Failed to Delete";
+    $response['code'] = 0;
+    $response['message'] = "Failed to Delete";
   }
 }else{
-  $respose['code'] = 0;
-  $respose['message'] = "Failed to Delete, data Not Found";
+  $response['code'] = 0;
+  $response['message'] = "Failed to Delete, data Not Found";
 }
 
-$response['selectedRowId'] = $selectedRowId;
-echo json_encode($respose);
+$response['no_invoice'] = $no_invoice;
+
+echo json_encode($response);
 }
 
 

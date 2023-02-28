@@ -23,10 +23,9 @@ require "db.php";
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js"></script>
     <script src="highlight.js" type="text/javascript"></script>
-    <!-- <script src="jquery.js"></script>
-<script src="dist/jquery.inputmask.js"></script>
-<script src="dist/inputmask.js"></script>
-<script src="dist/bindings/inputmask.binding.js"></script> -->
+    <script type="text/javascript" language="javascript" src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+
+
 </head>
 <style>
     body {
@@ -46,19 +45,26 @@ require "db.php";
 <body>
 
     <div class="container">
-        <form action="" method="post">
-            <table id="grid_id"></table>
-            <div id="jqGridPager" class="sasa"></div>
-
-        </form>
+    <form action="" method="post">
+                <table id="grid_id"></table>
+                <div id="jqGridPager"></div>
+                <div id="t_penjualan"></div>
+    </form> 
     </div>
 
 
 
     <script>
+        // const customerTable = '#customer'
+        // const customerPager = '#jqGridPager'
+        // const customerDialog = '#t_penjualan'
+        // const customerForm = '#customerForm'
+
+
+
         const customerTable = '#grid_id'
         let indexRow = 0
-        let sortName = 'customer_name'
+        let sortName = 'no_invoice'
         let timeout = null
         let highlightSearch
         let noInvoice
@@ -68,8 +74,9 @@ require "db.php";
         let triggerClick = true
         let activeGrid = '#grid_id'
         let socket
+        
         const form = document.querySelector('form');
-const table = document.querySelector('table');
+        const table = document.querySelector('table');
 
 // menambahkan event listener pada form untuk menangkap event submit
 form.addEventListener('submit', function(event) {
@@ -96,7 +103,7 @@ form.addEventListener('submit', function(event) {
 	      postData: {
 	        page: 1,
 	        rows: 10,
-	        sidx: 'customer_name',
+	        sidx: 'no_invoice',
 	        sord: 'asc',
 	      },
 	    })
@@ -117,6 +124,41 @@ form.addEventListener('submit', function(event) {
 		</div>
 	`)
 })
+
+
+// function addCustomer() {
+// 	$(customerDialog).load(baseUrl + 'customer/create', function() {
+// 		$($(customerForm + ' input')[0]).focus()
+// 		$.ajax({
+// 			url: 'add_header.php',
+// 			type: 'GET',
+// 			dataType: 'JSON',
+// 			success: function(res) {
+// 				res.forEach(function(el, i) {
+// 					$(`input[name=${el.name}`).attr('maxlength', el.max_length)
+// 				})
+// 			}
+// 		})
+// 	}).dialog({
+// 		modal: true,
+// 		title: "Add Customer",
+// 		height: '500',
+// 		width: '650',
+// 		position: [0, 0],
+// 		buttons: {
+// 			'Save': function() {
+// 				storeCustomer()
+// 			},
+// 			'Cancel': function() {
+			
+// 				$(this).dialog('close')
+// 			}
+// 		}
+// 	})
+// }
+
+
+
 function highlightRow(rowId, response) {
   // Menambahkan kelas CSS pada baris yang baru saja dimasukkan
   $("#" + rowId).addClass("highlight");
@@ -128,23 +170,44 @@ function highlightRow(rowId, response) {
             datatype: 'json',
             url: 'data.php',
             pager: '#jqGridPager',
+   
             emptyrecords: "Nothing to display",
             mtype: 'GET',
             // mtype: 'POST',
+            sortable: true,
             editurl: 'update.php',
+    //         onSelectRow: function(rowid) {
+    //     // Set selected row
+    //     $("#grid_id").setSelection(rowid);
+    // },
+    // afterSubmit: function(response, postdata) {
+    //     // Reload grid
+    //     $("#grid_id").trigger("reloadGrid");
+
+    //     // Get selected row id
+    //     var rowid = $("#grid_id").getGridParam("selrow");
+
+    //     // Set selected row
+    //     $("#grid_id").setSelection(rowid);
+        
+    //     // Return true to prevent default error handling
+    //     return [true];
+    // },
             colModel: [
 
                 {
                     name: 'id',
                     label: 'Id',
+                    index: 'id',
                     key: true,
                     search: true,
                     sortable: true,
                     datafield: 'id',
                     index: 'id',
-                    searchoptions: {
-                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
-                    }
+                    hidden: true
+                    // searchoptions: {
+                    //     sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
+                    // }
 
                 },
                 {
@@ -174,42 +237,43 @@ function highlightRow(rowId, response) {
                 },
                 {
                     name: 'tgl_pembelian',
-                    width: 200,
-                    index: 'tgl_pembelian',
-                    searchoptions: {
-                        sopt: ["eq", "ne", "lt", "le", "gt", "ge"]
-                    },
-                    datafield: 'tgl_pembelian',
-                    label: 'Tanggal Pembelian',
-                    editable: true,
-                    sorttype: 'date',
-                    formatter: 'date',
-                    search: true,
-                    sortable: true,
-                    loadonce: false,
-                    formatoptions: {
-                        srcformat: "Y-m-d",
-                        newformat: "d-m-Y"
-
-                    },
-                    editoptions: {
-
-                        dataInit: function (tgl) {
-                            $(tgl).datepicker({
-                                dateFormat: 'dd-mm-yy',
-                            }), $(tgl).inputmask("date", {
-                                mask: "1-2-y",
-                                separator: "-",
-                                alias: "D-M-Y",
-
-                            })
-
-
-
+                            index: 'tgl_pembelian',
+                            sortable: true,
+                            editable: true,
+                            editoptions:
+                            {
+                                dataInit: function(element) 
+                                {
+                                    $(element).attr('autocomplete', 'off'),
+                                    $(element).css('text-transform', 'uppercase'),
+                                    $(element).datepicker(
+                                        {
+                                            dateFormat: 'dd-mm-yy'
+                                        }
+                                    ),
+                                    $(element).inputmask("date",
+                                        {
+                                            mask: "1-2-y",
+                                            separator: "-",
+                                            alias: "d-m-y"
+                                        }
+                                    )
+                                }
+                            },
+                            formatter: 'text',
+                            formatoptions: 
+                            { 
+                                newformat: 'd-m-Y'
+                            },
+                            sorttype:'date',
+                            searchoptions: 
+                            {
+                                dataInit: function(element)
+                                {
+                                    $(element).attr('autocomplete', 'off')
+                                }
+						    }
                         },
-                    },
-
-                },
                 {
                     name: 'nama_pelanggan',
                     label: 'Nama Pelanggan',
@@ -303,9 +367,12 @@ function highlightRow(rowId, response) {
                         }
                     },
 
+
                 },
+               
 
             ],
+     
             viewrecords: true,
             width: 1200,
             height: 200,
@@ -315,7 +382,14 @@ function highlightRow(rowId, response) {
             ], //rowList adalah daftar opsi jumlah baris yang dapat dipilih oleh pengguna untuk ditampilkan pada setiap halaman
             pager: "#jqGridPager",
             caption: "Master Penjualan",
-            sortname: 'id',
+            editoptions: {
+        closeAfterEdit: true,
+        closeAfterAdd: true,
+        modal: true,
+        width: 4000,
+        formId: "form_id"
+    },
+            sortname: 'no_invoice',
             autoencode: true,
             sortorder: 'asc',
             height: 'auto',
@@ -328,7 +402,7 @@ function highlightRow(rowId, response) {
             ignoreCase: true,
             shrinkToFit: true,
             toolbar: [true, 'top'],
-         
+       
             onSelectRow: function (id) {
 
                 indexRow = $(this).jqGrid('getCell', id, 'rn') - 1
@@ -338,7 +412,6 @@ function highlightRow(rowId, response) {
 
             },
             loadComplete: function () {
-                // bindkeys
              
                 $(document).unbind('keydown')
                 setCustomBindKeys($(this))
@@ -400,40 +473,48 @@ function highlightRow(rowId, response) {
                         .attr('autocomplete', 'off')
                 }, 50)
             },
-            //cara buat parameter sendiri di jqgrid
-            postData: {
-                searchField: "",
-                searchOper: "",
-                searchString: ""
-            },
-            postData: {
-                global_search: function () {
-                    return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData")
-                        .global_search);
-                }
-            },
-            search: "gSearch",
-            postData: {
-                global_search: ""
-            },
 
-            postData: {
-                searchField: "",
-                searchOper: "",
-                searchString: ""
-            },
-            postData: {
-                filters: function () {
-                    return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData")
-                        .filters);
-                }
-            },
-            search: true,
-            postData: {
-                filters: ""
-            }
+            //cara buat parameter sendiri di jqgrid
+            // postData: {
+            //     searchField: "",
+            //     searchOper: "",
+            //     searchString: ""
+            // },
+            // postData: {
+            //     global_search: function () {
+            //         return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData")
+            //             .global_search);
+            //     }
+            // },
+            // search: "gSearch",
+            // postData: {
+            //     global_search: ""
+            // },
+
+            // postData: {
+            //     searchField: "",
+            //     searchOper: "",
+            //     searchString: ""
+            // },
+            // postData: {
+            //     filters: function () {
+            //         return JSON.stringify(jQuery("#jqGridPager").jqGrid("getGridParam", "postData")
+            //             .filters);
+            //     }
+            // },
+            // search: true,
+            // postData: {
+            //     filters: ""
+            // }
 
         });
+        var source =
+                {
+                    beforeprocessing: function(data)
+                    {		
+                        source.totalrecords = data[0].TotalRows;
+                    }
+                };
 //         $("grid_id").click(function() {
 //     // Menambahkan baris baru pada tabel
 //     $("#grid_id").jqGrid("editGridRow", "new", {
@@ -463,113 +544,21 @@ function highlightRow(rowId, response) {
             }
         });
 
-        $("#grid_id").jqGrid({
-  // konfigurasi jQGrid lainnya
-  onSelectRow: function(id) {
-    var rowData = $(this).getRowData(id);
-    // mengisi nilai input form dengan data yang dipilih
-    $('#id').val(rowData.id);
-    $('#no_invoice').val(rowData.no_invoice);
-    $('#nama_pelanggan').val(rowData.nama_pelanggan);
-    $('#jenis_kelamin').val(rowData.jenis_kelamin);
-    $('#saldo').val(rowData.saldo);
-    $('#tgl_pembelian').val(rowData.tgl_pembelian);
-
-    // menyimpan ID baris yang dipilih untuk operasi CRUD
-    var selectedRowId = id;
-    if(response.code === 1) {
-  // menampilkan pesan sukses
-  alert(response.message);
-
-  // memilih kembali baris yang dipilih sebelumnya
-  $("#grid_id").setSelection(response.selectedRowId);
-}
-  }
-});
-var selectedRowId = $("#grid_id").jqGrid('getGridParam', 'selrow');
-
-// Perbarui data grid dengan memuat ulang grid
-$("#grid_id").trigger('reloadGrid');
-
-// Pilih kembali baris yang sama yang dipilih sebelumnya
-if (selectedRowId !== null) {
-  $("#grid_id").jqGrid('setSelection', selectedRowId, true);
-}
-
-
-
-
-        jQuery("#grid_id").on("change keyup", function () {
-            var search_value = jQuery(this).val();
-            jQuery("#grid_id").setGridParam({
-                postData: {
-                    filters: JSON.stringify({
-                        groupOp: "AND",
-                        rules: [{
-                            field: "column_name",
-                            op: "cn",
-                            data: search_value
-                        }]
-                    }),
-                    multipleSearch: true,
-
-                }
-            }).trigger("reloadGrid");
-        });
-        $("#grid_id").jqGrid('navButtonAdd', '#jqGridPager', {
-            caption: "",
-            title: "Clear All Filters",
-            buttonicon: "ui-icon-refresh",
-            onClickButton: function () {
-                $("#grid_id")[0].clearToolbar();
-                $("#grid_id").trigger("reloadGrid");
-
-            }
-        });
-        // bagaimana membuat input data dapat terlihat dibaris pertama ketika disubmit
-        // konfigurasi jqgrid untuk membuat kolom pencarian
-//         $("#grid_id").jqGrid({
-//   // konfigurasi jQGrid lainnya
-//   pager: "#jqGridPager",
-//   inlineNav: {
-//     add: true, // menampilkan tombol Tambah
-//     edit: false, // tidak menampilkan tombol Edit
-//     save: true, // menampilkan tombol Simpan
-//     cancel: true, // menampilkan tombol Batal
-//     addParams: {
-//       rowID: "new_row", // memberikan ID pada baris yang akan ditambahkan
-//       useFormatter: false, // menggunakan form input bawaan jQGrid
-//       addRowParams: {
-//         // konfigurasi form input
-//         position: "first", // menampilkan form di baris pertama
-//         addRow: "top", // menambahkan baris di bagian atas grid
-//         keys: true, // memungkinkan pengguna untuk menekan tombol Enter untuk menyimpan
-//         closeOnEscape: true,
-//          // menutup form ketika pengguna menekan tombol Escape
-//       }
-//     }
-//   }
-// });
-
-// var lastRow = $("#grid_id").jqGrid("getGridParam", "records");
-// $("#grid_id").setSelection(lastRow);
-
-        // onUpKey: function() {
-        //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');
-        //     var prevRow = $("#grid_id").jqGrid('getRowData', selrow - 0);
-        //     if (prevRow !== null) {
-        //         $("#grid_id").jqGrid('setSelection', selrow + 0, true);
-        //     }
-        // },
-        // onDownKey: function() {
-        //     var selrow = $("#grid_id").jqGrid('getGridParam', 'selrow');
-        //     var nextRow = $("#grid_id").jqGrid('getRowData', selrow + 0);
-        //     if (nextRow !== null) {
-        //         $("#grid_id").jqGrid('setSelection', selrow - 0, true);
-        //     }
-        // }
         
+      
 
+        // $("#grid_id").jqGrid('navButtonAdd', '#jqGridPager', {
+        //     caption: "",
+        //     title: "Clear All Filters",
+        //     buttonicon: "ui-icon-refresh",
+        //     onClickButton: function () {
+        //         $("#grid_id")[0].clearToolbar();
+        //         $("#grid_id").trigger("reloadGrid");
+
+        //     }
+        // });
+       
+        
         jQuery("#grid_id").jqGrid('navGrid', '#jqGridPager', null, {
 
             recreateForm: true, //formulir akan dibuat ulang setiap kali dialog diaktifkan dengan opsi baru dari colModel
@@ -608,17 +597,91 @@ if (selectedRowId !== null) {
 
 
              
-            }
-
+            },
+            // recreateForm: true,
+            recreateForm: true,
+             afterSubmit:callAfterSubmit,
+            // reloadAfterSubmit:true,
+            closeAfterEdit: true
         }, {
-            recreateForm: true
+            recreateForm: true,
+             afterSubmit:callAfterSubmit,
+             closeAfterAdd: true
+            // reloadAfterSubmit:true,
+          
+             
+    }
+,);
 
-        });
+function callAfterSubmit(response, postData, oper) {
+    // get the sort field, sort order, and page size
+    var sortfield = $(this).jqGrid('getGridParam', 'postData').sidx;
+    var sortorder = $(this).jqGrid('getGridParam', 'postData').sord;
+    var pagesize = $(this).jqGrid('getGridParam', 'postData').rows;
 
-        /**
-         * Set Home, End, PgUp, PgDn
-         * to move grid page
-         */
+    // get the value of the field that uniquely identifies the newly inserted data
+    var no_invoice = postData.no_invoice;
+
+    // make an AJAX call to your PHP script to get the position of the data
+    $.ajax({
+    url: "add_header.php",
+    type: "POST",
+    dataType: 'json',
+    data: {
+        no_invoice: no_invoice,
+        sidx: sortfield,
+        sord: sortorder,
+    },
+    success: function(data) {
+        $('#cData').click();
+        var position = data.position;//2
+        var page = Math.ceil(position / pagesize);//2 : 10 = 0,2
+        var row = position - (page - 1) * pagesize;// 2- (0,2 -1) * 10
+        indexRow = row-1;
+        $("#grid_id").jqGrid("setGridParam", { page: page }).trigger("reloadGrid");
+        $("#grid_id").jqGrid("setSelection", row);
+        console.log(position);
+        console.log(pagesize);
+        console.log(page);
+        console.log(row);
+        console.log(indexRow);
+        console.log(data);
+    }
+});
+
+//     console.log("no_invoice: " + no_invoice);
+// console.log("sortfield: " + sortfield);
+// console.log("sortorder: " + sortorder);
+// console.log("pagesize: " + pagesize);
+} 
+
+
+  
+
+
+$('#grid_id').navButtonAdd('#jqGridPager', {
+   	    caption: "",
+		title: "Report",
+		id: "customersReport",
+		buttonicon: "ui-icon-document",
+		onClickButton:function(){
+            $('#jqGridPager')
+				.html(`
+					<div class="ui-state-default" style="padding: 5px;">
+						<h5> Tentukan Baris </h5>
+						
+						<label> Dari: </label>
+						<input type="text" name="start" value="${$(this).getInd($(this).getGridParam('selrow'))}" class="ui-widget-content ui-corner-all autonumeric" style="padding: 5px; text-transform: uppercase;" max="2" required>
+
+						<label> Sampai: </label>
+						<input type="text" name="limit" value="${$(this).getGridParam('records')}" class="ui-widget-content ui-corner-all autonumeric" style="padding: 5px; text-transform: uppercase;" max="2" required>
+					</div>
+				`)
+                
+                
+        }
+        })
+
         function setCustomBindKeys(grid) {
             $(document).on("keydown", function (e) {
                 if (activeGrid) {
