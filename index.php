@@ -11,6 +11,9 @@ require "db.php";
     <title>CRUD</title>
     <link rel="stylesheet" type="text/css" media="screen" href="css/jquery-ui.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="css/trirand/ui.jqgrid.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/jquery-ui.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="css/trirand/ui.jqgrid.css" />
+
     <script src="js/jquery.min.js" type="text/javascript"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
@@ -25,6 +28,9 @@ require "db.php";
     <script src="highlight.js" type="text/javascript"></script>
     <script type="text/javascript" language="javascript" src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
 
+   
+    <script src="js/trirand/i18n/grid.locale-en.js" type="text/javascript"></script>
+    <script src="js/trirand/jquery.jqGrid.min.js" type="text/javascript"></script>
 
 </head>
 <style>
@@ -665,7 +671,7 @@ $('#grid_id').navButtonAdd('#jqGridPager', {
 		id: "customersReport",
 		buttonicon: "ui-icon-document",
 		onClickButton:function(){
-            $('#jqGridPager')
+            $('#t_penjualan')
 				.html(`
 					<div class="ui-state-default" style="padding: 5px;">
 						<h5> Tentukan Baris </h5>
@@ -678,7 +684,37 @@ $('#grid_id').navButtonAdd('#jqGridPager', {
 					</div>
 				`)
                 
-                
+                .dialog({
+					modal: true,
+					title: "Customer Report",
+					height: '200',
+					width: '500',
+					position: [0, 0],
+					buttons: {
+						'Report': function() {
+							let start = $(this).find('input[name=start]').val()
+							let limit = $(this).find('input[name=limit]').val()
+							let params
+
+							if (parseInt(start) > parseInt(limit)) {
+								return alert('Sampai harus lebih besar')
+							}
+
+							for (var key in postData) {
+						    if (params != "") {
+						        params += "&";
+						    }
+						    params += key + "=" + encodeURIComponent(postData[key]);
+							}
+
+							window.open( baseUrl + `customer/report?${params}&start=${start}&limit=${limit}&orders_sidx=${ordersPostData.sidx}&orders_sord=${ordersPostData.sord}`)
+						},
+						'Cancel': function() {
+							activeGrid = '#customer'
+							$(this).dialog('close')
+						}
+					}
+				})
         }
         })
 
