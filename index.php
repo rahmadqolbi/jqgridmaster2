@@ -11,9 +11,6 @@ require "db.php";
     <title>CRUD</title>
     <link rel="stylesheet" type="text/css" media="screen" href="css/jquery-ui.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="css/trirand/ui.jqgrid.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="css/jquery-ui.css" />
-<link rel="stylesheet" type="text/css" media="screen" href="css/trirand/ui.jqgrid.css" />
-
     <script src="js/jquery.min.js" type="text/javascript"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
@@ -28,9 +25,6 @@ require "db.php";
     <script src="highlight.js" type="text/javascript"></script>
     <script type="text/javascript" language="javascript" src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
 
-   
-    <script src="js/trirand/i18n/grid.locale-en.js" type="text/javascript"></script>
-    <script src="js/trirand/jquery.jqGrid.min.js" type="text/javascript"></script>
 
 </head>
 <style>
@@ -618,51 +612,50 @@ function highlightRow(rowId, response) {
              
     }
 ,);
-
 function callAfterSubmit(response, postData, oper) {
-    // get the sort field, sort order, and page size
-    var sortfield = $(this).jqGrid('getGridParam', 'postData').sidx;
-    var sortorder = $(this).jqGrid('getGridParam', 'postData').sord;
-    var pagesize = $(this).jqGrid('getGridParam', 'postData').rows;
-
-    // get the value of the field that uniquely identifies the newly inserted data
+    var $grid = $(this); // simpan referensi ke grid dalam variabel lokal
+    var sortfield = $grid.jqGrid('getGridParam', 'postData').sidx;
+    var sortorder = $grid.jqGrid('getGridParam', 'postData').sord;
+    var pagesize = $grid.jqGrid('getGridParam', 'postData').rows;
+    var filters = $grid.jqGrid('getGridParam', 'postData').filters;
+    var global_search = $grid.jqGrid('getGridParam', 'postData').global_search;
     var no_invoice = postData.no_invoice;
 
-    // make an AJAX call to your PHP script to get the position of the data
     $.ajax({
-    url: "add_header.php",
-    type: "POST",
-    dataType: 'json',
-    data: {
-        no_invoice: no_invoice,
-        sidx: sortfield,
-        sord: sortorder,
-    },
-    success: function(data) {
-        $('#cData').click();
-        var position = data.position;//2
-        var page = Math.ceil(position / pagesize);//2 : 10 = 0,2
-        var row = position - (page - 1) * pagesize;// 2- (0,2 -1) * 10
-        indexRow = row-1;
-        $("#grid_id").jqGrid("setGridParam", { page: page }).trigger("reloadGrid");
-        $("#grid_id").jqGrid("setSelection", row);
-        console.log(position);
-        console.log(pagesize);
-        console.log(page);
-        console.log(row);
-        console.log(indexRow);
-        console.log(data);
-    }
-});
+        url: "add_header.php",
+        type: "POST",
+        dataType: 'json',
+        data: {
+            no_invoice: no_invoice,
+            sidx: sortfield,
+            sord: sortorder,
+            filters: filters,
+            global_search: global_search
+        },
+        success: function(data) {
+            var totalrows = $grid.getGridParam('records');
+            var position = data.position;
+            var page = Math.ceil(position / pagesize);
+            var row = position - (page - 1) * pagesize;
+            indexRow = row-1;
+            $grid.jqGrid("setGridParam", { page: page, totalrows: totalrows }).trigger("reloadGrid");
+            $grid.jqGrid("setSelection", row);
+            console.log(position);
+            console.log(pagesize);
+            console.log(page);
+            console.log(row);
+            console.log(indexRow);
+            console.log(data);
+            console.log(filters);
+            console.log(global_search);
+        }
+    });
+}
 
-//     console.log("no_invoice: " + no_invoice);
-// console.log("sortfield: " + sortfield);
-// console.log("sortorder: " + sortorder);
-// console.log("pagesize: " + pagesize);
-} 
 
 
-  
+
+           // $('#cData').click();
 
 
 $('#grid_id').navButtonAdd('#jqGridPager', {
@@ -671,7 +664,7 @@ $('#grid_id').navButtonAdd('#jqGridPager', {
 		id: "customersReport",
 		buttonicon: "ui-icon-document",
 		onClickButton:function(){
-            $('#t_penjualan')
+            $('#jqGridPager')
 				.html(`
 					<div class="ui-state-default" style="padding: 5px;">
 						<h5> Tentukan Baris </h5>
@@ -684,37 +677,7 @@ $('#grid_id').navButtonAdd('#jqGridPager', {
 					</div>
 				`)
                 
-                .dialog({
-					modal: true,
-					title: "Customer Report",
-					height: '200',
-					width: '500',
-					position: [0, 0],
-					buttons: {
-						'Report': function() {
-							let start = $(this).find('input[name=start]').val()
-							let limit = $(this).find('input[name=limit]').val()
-							let params
-
-							if (parseInt(start) > parseInt(limit)) {
-								return alert('Sampai harus lebih besar')
-							}
-
-							for (var key in postData) {
-						    if (params != "") {
-						        params += "&";
-						    }
-						    params += key + "=" + encodeURIComponent(postData[key]);
-							}
-
-							window.open( baseUrl + `customer/report?${params}&start=${start}&limit=${limit}&orders_sidx=${ordersPostData.sidx}&orders_sord=${ordersPostData.sord}`)
-						},
-						'Cancel': function() {
-							activeGrid = '#customer'
-							$(this).dialog('close')
-						}
-					}
-				})
+                
         }
         })
 

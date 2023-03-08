@@ -110,34 +110,8 @@ $limit = $_GET['rows']; // get how many rows we want to have into the grid
 $sidx = $_GET['sidx']; // get index row - i.e. user click to sort
 $sord = $_GET['sord']; // get the direction
 
-  
-$result = mysqli_query($koneksi,"SELECT COUNT(*) AS count FROM penjualan");
-$row = mysqli_fetch_array($result);
-$count = $row['count'];
-
-// echo "count: $count<br>";
-if( $count > 0 ) { 
-  $total_pages = ceil($count/$limit);
-//$total_pages = ceil($count/1);
-} else {
-  $total_pages = 0; 
-} 
-// echo "total page: $total_pages<br>";
-if ($page > $total_pages) 
-{
-  $page=$total_pages; 
-}
-
-$start = $limit*$page - $limit; 
-
-$responce = new stdClass();
-
-// global search
 $query = "SELECT * FROM penjualan";
 $query_result = "SELECT COUNT(*) AS count FROM penjualan";
-// $querySearch = "SELECT * FROM penjualan";
-// $query_resultSearch = "SELECT COUNT(*) AS count FROM penjualan";
-
 
 if(isset($_GET['global_search']))
 {
@@ -145,6 +119,7 @@ if(isset($_GET['global_search']))
   $query .= " WHERE id LIKE '%$search%' OR no_invoice LIKE '%$search%' OR tgl_pembelian LIKE '%$search%' OR nama_pelanggan LIKE '%$search%' OR jenis_kelamin LIKE '%$search%' OR saldo LIKE '%$search%' ";
   $query_result .= " WHERE id LIKE '%$search%' OR no_invoice LIKE '%$search%' OR tgl_pembelian LIKE '%$search%' OR nama_pelanggan LIKE '%$search%' OR jenis_kelamin LIKE '%$search%' OR saldo LIKE '%$search%'";
 }
+
 // filters
 if($filters = isset($_GET['filters']) ? json_decode($_GET['filters'], true) : [])
 {
@@ -180,42 +155,18 @@ if($filters = isset($_GET['filters']) ? json_decode($_GET['filters'], true) : []
   {
     $page=$total_pages; 
   }
-
   $start = $limit*$page - $limit; 
-
   $responce = new stdClass();
   $query .= " ORDER BY $sidx $sord LIMIT $start , $limit";
-  // $query_result .= " ORDER BY $sidx $sord LIMIT $start , $limit";
-  $sql = mysqli_query($koneksi, $query); 	
-  // echo "count: $count<br>";
-  if( $count > 0 ) { 
-    $total_pages = ceil($count/$limit);
-  //$total_pages = ceil($count/1);
-  } else {
-    $total_pages = 1; 
-  } 
-  // echo "total page: $total_pages<br>";
-  if ($page > $total_pages) 
-  {
-    $page=$total_pages; 
-  }
-  $start = $limit*$page - $limit; 
-  $responce = new stdClass();
 
-
-//  $responce->tes = $query;
  $responce->page = $page; //Mengisi nilai atribut page pada objek $response
  $responce->total = $total_pages; //Mengisi nilai atribut total pada objek $response
  $responce->records = $count; //Mengisi nilai atribut records pada objek $response
  $responce->count = $count;
  $i=0;
  $result = mysqli_query($koneksi, $query);
-//  if (!$result) {
-//      die('Query error: ' . mysqli_error($koneksi));
-//  }
 while($row = mysqli_fetch_array($result))
 {
-   // $data_header[] = $data; 
   $responce->rows[$i]['id']=$row['id'];
   $responce->rows[$i]['cell']=array($row['id'],$row['no_invoice'],date('d-m-Y', strtotime($row['tgl_pembelian'])),$row['nama_pelanggan'],$row['jenis_kelamin'],$row['saldo'],""); $i++;
 }
